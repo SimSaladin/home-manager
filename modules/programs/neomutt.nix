@@ -82,9 +82,15 @@ let
       };
 
       action = mkOption {
-        type = types.str;
+        type = types.nullOr types.str;
         example = "<enter-command>toggle sidebar_visible<enter><refresh>";
         description = "Specify the action to take.";
+      };
+
+      description = mkOption {
+        type = types.str;
+        default = "";
+        description = "Description of the macro.";
       };
     };
   };
@@ -131,6 +137,19 @@ let
       ${concatStringsSep "\n" folderHook}
     '';
 
+  genImapAccountConfig = account:
+    with account;
+    let
+      passCmd = concatStringsSep " " passwordCommand;
+      folderHook = mapAttrsToList setOption (genCommonFolderHooks account // {
+        folder = "'imaps://${escape userName}@${imap.host}:${toString imap.port}/'";
+        imap_user = "'${userName}'";
+        imap_pass = "\"`${passCmd}`\"";
+      });
+    in ''
+      ${concatStringsSep "\n" folderHook}
+    '';
+
   registerAccount = account:
     let
       mailboxes = if account.neomutt.mailboxName == null then
@@ -146,20 +165,37 @@ let
           ''
             named-mailboxes "${extra.name}" "${account.maildir.absPath}/${extra.mailbox}"'')
         account.neomutt.extraMailboxes;
+      folder = with account;
+        if account.maildir != null then
+          "${account.maildir.absPath}"
+        else "imaps://${escape userName}@${imap.host}:${toString imap.port}";
     in with account; ''
       # register account ${name}
-      ${mailboxes} "${maildir.absPath}/${folders.inbox}"
-      ${extraMailboxes}
-      folder-hook ${maildir.absPath}/ " \
-          source ${accountFilename account} "
+      source ${accountFilename account}
+      mailboxes "${folder}/${folders.inbox}"
+
+      set my_account_folder_${name} = '${folder}/'
+      set my_account_hook_${name} = "set imap_user='$imap_user'; set imap_pass='$imap_pass'; set imap_authenticators='$imap_authenticators'; set imap_oauth_refresh_command='$imap_oauth_refresh_command'"
+      set my_folder_hook_${name} = "set folder='$folder'; set spoolfile='$spoolfile'; set record='$record'; set postponed='$postponed'; set trash='$trash'; set copy='$copy'"
     '';
+
+  accountHooks = account:
+  with account;
+  ''
+    folder-hook ($my_account_folder_${name}) "$my_folder_hook_${name}"
+    account-hook ($my_account_folder_${name}) "$my_account_hook_${name}"
+  '';
+  # XXX reset:
+  #    account-hook . 'unset imap_user imap_pass imap_oauth_refresh_command; reset imap_authenticators'
 
   mraSection = account:
     with account;
     if account.maildir != null then
       genMaildirAccountConfig account
+    else if account.imap != null then
+      genImapAccountConfig account
     else
-      throw "Only maildir is supported at the moment";
+      throw "Only maildir and imap are supported at the moment";
 
   optionsStr = attrs: concatStringsSep "\n" (mapAttrsToList setOption attrs);
 
@@ -173,14 +209,23 @@ let
 
   genBindMapper = bindType:
     concatMapStringsSep "\n" (bind:
-      ''
-        ${bindType} ${
-          concatStringsSep "," (toList bind.map)
-        } ${bind.key} "${bind.action}"'');
+      if bind.action == null then
+        ''
+          un${bindType} ${
+            concatStringsSep "," (toList bind.map)
+          } ${bind.key}''
+      else
+        ''
+          ${bindType} ${
+            concatStringsSep "," (toList bind.map)
+          } ${bind.key} "${bind.action}"'');
 
   bindSection = (genBindMapper "bind") cfg.binds;
 
   macroSection = (genBindMapper "macro") cfg.macros;
+# XXX TODO macro descriptions
+# macroSection = concatMapStringsSep "\n"
+#   (macro: ''macro ${macro.map} ${macro.key} "${macro.action}" "${macro.description}"'') cfg.macros;
 
   mailCheckSection = ''
     set mail_check_stats
@@ -294,7 +339,7 @@ in {
       };
 
       settings = mkOption {
-        type = types.attrsOf types.str;
+        type = types.attrsOf (types.nullOr types.str);
         default = { };
         description = "Extra configuration appended to the end.";
       };
@@ -355,6 +400,9 @@ in {
 
         # Source primary account
         source ${accountFilename primary}
+
+        # Account hooks
+        ${concatMapStringsSep "\n" accountHooks neomuttAccounts}
 
         # Extra configuration
         ${optionsStr cfg.settings}
