@@ -16,6 +16,9 @@ Makefile                                              @thiagokokada
 
 /modules/launchd                                      @midchildan
 
+/modules/lib/generators.nix                           @h7x4
+/test/lib/generators                                  @h7x4
+
 /modules/misc/dconf.nix                               @rycee
 
 /modules/misc/editorconfig.nix                        @loicreynier
@@ -141,6 +144,8 @@ Makefile                                              @thiagokokada
 
 /modules/programs/home-manager.nix                    @rycee
 
+/modules/programs/hstr.nix                            @Dines97
+
 /modules/programs/htop.nix                            @bjpbakker
 /tests/modules/htop                                   @bjpbakker
 
@@ -149,7 +154,8 @@ Makefile                                              @thiagokokada
 
 /modules/programs/i3status.nix                        @JustinLovinger
 
-/modules/programs/i3status-rust.nix                   @workflow
+/modules/programs/i3status-rust.nix                   @workflow @thiagokokada
+/tests/modules/programs/i3status-rust                 @thiagokokada
 
 /modules/programs/ion.nix                             @jo1gi
 
@@ -199,8 +205,8 @@ Makefile                                              @thiagokokada
 /modules/programs/micro.nix                           @MForster
 /tests/modules/programs/micro                         @MForster
 
-/modules/programs/mpv.nix                             @tadeokondrak @thiagokokada
-/tests/modules/programs/mpv                           @thiagokokada
+/modules/programs/mpv.nix                             @tadeokondrak @thiagokokada @chuangzhu
+/tests/modules/programs/mpv                           @thiagokokada @chuangzhu
 
 /modules/programs/mu.nix                              @KarlJoad
 
@@ -365,6 +371,8 @@ Makefile                                              @thiagokokada
 
 /modules/services/autorandr.nix                       @GaetanLepage
 
+/modules/services/avizo.nix                           @pltanton
+
 /modules/services/barrier.nix                         @Kritnich
 /tests/modules/services/barrier                       @Kritnich
 
@@ -383,6 +391,8 @@ Makefile                                              @thiagokokada
 /tests/modules/services/clipman                       @jwygoda
 
 /modules/services/clipmenu.nix                        @DamienCassou
+
+/modules/services/copyq.nix                           @DamienCassou
 
 /modules/services/devilspie2.nix                      @dawidsowa
 /tests/modules/services/devilspie2                    @dawidsowa
@@ -434,6 +444,8 @@ Makefile                                              @thiagokokada
 
 /modules/services/lieer.nix                           @tadfisher
 
+/modules/services/listenbrainz-mpd.nix                @Scrumplex
+
 /modules/services/lorri.nix                           @Gerschtli
 
 /modules/services/mako.nix                            @onny
@@ -446,6 +458,9 @@ Makefile                                              @thiagokokada
 /tests/modules/services/mopidy                        @foo-dogsquared
 
 /modules/services/mpdris2.nix                         @pjones
+
+/modules/services/mpd-mpris.nix                       @olmokramer
+/tests/modules/services/mpd-mpris                     @olmokramer
 
 /modules/services/mpd-discord-rpc.nix                 @Kranzes
 

@@ -915,6 +915,70 @@ in
           A new module is available: 'services.autorandr'.
         '';
       }
+
+      {
+        time = "2023-02-20T22:31:23+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          A new module is available: 'services.mpd-mpris'.
+        '';
+      }
+
+      {
+        time = "2023-02-22T22:16:37+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          A new module is available: 'services.avizo'.
+        '';
+      }
+
+      {
+        time = "2023-03-16:12:00+00:00";
+        condition = config.programs.i3status-rust.enable;
+        message = ''
+          Module 'i3status-rust' was updated to support the new configuration
+          format from 0.30.x releases, that introduces many breaking changes.
+          The documentation was updated with examples from 0.30.x to help
+          the transition.
+
+          See https://github.com/greshake/i3status-rust/blob/v0.30.0/NEWS.md
+          for instructions on how to migrate.
+
+          Users that don't want to migrate yet can set
+          'programs.i3status-rust.package' to an older version.
+        '';
+      }
+
+      {
+        time = "2023-03-22T07:20:00+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          A new module is available: 'services.listenbrainz-mpd'.
+        '';
+      }
+
+      {
+        time = "2023-03-22T07:31:38+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          A new module is available: 'services.copyq'.
+        '';
+      }
+
+      {
+        time = "2023-03-25T11:03:24+00:00";
+        condition = hostPlatform.isDarwin;
+        message = ''
+          A new module is available: 'services.syncthing'.
+        '';
+      }
+
+      {
+        time = "2023-03-25T14:53:57+00:00";
+        message = ''
+          A new module is available: 'programs.hstr'.
+        '';
+      }
     ];
   };
 }

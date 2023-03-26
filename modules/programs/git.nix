@@ -340,6 +340,14 @@ in {
           '';
         };
 
+        pagerOpts = mkOption {
+          type = types.listOf types.str;
+          default = [ "--tabs=4" "-RFX" ];
+          description = ''
+            Arguments to be passed to <command>less</command>.
+          '';
+        };
+
         markEmptyLines = mkOption {
           type = types.bool;
           default = true;
@@ -458,8 +466,8 @@ in {
     (mkIf (cfg.signing != null) {
       programs.git.iniContent = {
         user.signingKey = mkIf (cfg.signing.key != null) cfg.signing.key;
-        commit.gpgSign = cfg.signing.signByDefault;
-        tag.gpgSign = cfg.signing.signByDefault;
+        commit.gpgSign = mkDefault cfg.signing.signByDefault;
+        tag.gpgSign = mkDefault cfg.signing.signByDefault;
         gpg.program = cfg.signing.gpgPath;
       };
     })
@@ -547,7 +555,9 @@ in {
       programs.git.iniContent =
         let dsfCommand = "${pkgs.diff-so-fancy}/bin/diff-so-fancy";
         in {
-          core.pager = "${dsfCommand} | ${pkgs.less}/bin/less --tabs=4 -RFX";
+          core.pager = "${dsfCommand} | ${pkgs.less}/bin/less ${
+              escapeShellArgs cfg.diff-so-fancy.pagerOpts
+            }";
           interactive.diffFilter = "${dsfCommand} --patch";
           diff-so-fancy = {
             markEmptyLines = cfg.diff-so-fancy.markEmptyLines;

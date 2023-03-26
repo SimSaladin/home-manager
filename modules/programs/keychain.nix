@@ -87,6 +87,14 @@ in {
       '';
     };
 
+    enableNushellIntegration = mkOption {
+      default = true;
+      type = types.bool;
+      description = ''
+        Whether to enable Nushell integration.
+      '';
+    };
+
     enableXsessionIntegration = mkOption {
       default = true;
       type = types.bool;
@@ -108,8 +116,11 @@ in {
     programs.zsh.initExtra = mkIf cfg.enableZshIntegration ''
       eval "$(SHELL=zsh ${shellCommand})"
     '';
+    programs.nushell.extraConfig = mkIf cfg.enableNushellIntegration ''
+      ${shellCommand} | parse -r '(\w+)=(.*); export \1' | transpose -ird | load-env
+    '';
     xsession.initExtra = mkIf cfg.enableXsessionIntegration ''
-      eval "$(${shellCommand})"
+      eval "$(SHELL=bash ${shellCommand})"
     '';
   };
 }

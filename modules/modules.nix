@@ -90,6 +90,7 @@ let
     ./programs/hexchat.nix
     ./programs/himalaya.nix
     ./programs/home-manager.nix
+    ./programs/hstr.nix
     ./programs/htop.nix
     ./programs/hyfetch.nix
     ./programs/i3status-rust.nix
@@ -205,6 +206,7 @@ let
     ./programs/zsh.nix
     ./programs/zsh/prezto.nix
     ./services/autorandr.nix
+    ./services/avizo.nix
     ./services/barrier.nix
     ./services/betterlockscreen.nix
     ./services/blueman-applet.nix
@@ -214,6 +216,7 @@ let
     ./services/cbatticon.nix
     ./services/clipman.nix
     ./services/clipmenu.nix
+    ./services/copyq.nix
     ./services/devilspie2.nix
     ./services/dropbox.nix
     ./services/dunst.nix
@@ -242,6 +245,7 @@ let
     ./services/keybase.nix
     ./services/keynav.nix
     ./services/lieer.nix
+    ./services/listenbrainz-mpd.nix
     ./services/lorri.nix
     ./services/mako.nix
     ./services/mbsync.nix
@@ -250,6 +254,7 @@ let
     ./services/mpd.nix
     ./services/mpdris2.nix
     ./services/mpd-discord-rpc.nix
+    ./services/mpd-mpris.nix
     ./services/mpris-proxy.nix
     ./services/muchsync.nix
     ./services/network-manager-applet.nix

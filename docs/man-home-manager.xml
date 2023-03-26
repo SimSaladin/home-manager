@@ -18,6 +18,10 @@
    </arg>
 
    <arg choice="plain">
+    init <arg>--switch</arg> <arg><replaceable>dir</replaceable></arg>
+   </arg>
+
+   <arg choice="plain">
     instantiate
    </arg>
 
@@ -200,7 +204,9 @@
   <title>Description</title>
   <para>
    This command updates the user environment so that it corresponds to the
-      configuration specified in <filename>~/.config/nixpkgs/home.nix</filename> or <filename>~/.config/nixpkgs/flake.nix</filename>.
+   configuration specified in
+   <filename>$XDG_CONFIG_HOME/home-manager/home.nix</filename> or
+   <filename>$XDG_CONFIG_HOME/home-manager/flake.nix</filename>.
   </para>
   <para>
    All operations using this tool expects a sub-command that indicates the
@@ -215,6 +221,35 @@
        Build configuration into a <filename>result</filename> directory.
       </para>
      </listitem>
+    </varlistentry>
+    <varlistentry>
+      <term>
+        <option>init</option> [<option>--switch</option>] [<replaceable>dir</replaceable>]
+      </term>
+      <listitem>
+        <simpara>
+          Generates an initial <filename>home.nix</filename> file for the
+          current user. If Nix flakes are enabled, then this command also
+          generates a <filename>flake.nix</filename> file.
+        </simpara>
+        <simpara>
+          If a path <replaceable>dir</replaceable> is given then the
+          configuration will be generated in that directory. Otherwise, the
+          configuration will be generated in
+          <filename>~/.config/home-manager</filename>. The output directory will
+          be created if it does not exist.
+        </simpara>
+        <simpara>
+          If the <option>--switch</option> option is given, then the generated
+          configuration is activated.
+        </simpara>
+        <simpara>
+          Note, this command will not overwrite any existing files. It is
+          therefore safe to initialize a configuration, edit it, and then re-run
+          the <option>init</option> command with <option>--switch</option>
+          enabled to activate the configuration.
+        </simpara>
+      </listitem>
     </varlistentry>
     <varlistentry>
      <term>
@@ -346,8 +381,8 @@
         </listitem>
         <listitem>
          <para>
-          optionally remove all Home Manager generations and make them
-          available for immediate garbage collection.
+          remove all Home Manager generations and make them available
+          for immediate garbage collection.
          </para>
         </listitem>
        </itemizedlist>
@@ -434,7 +469,7 @@
     <listitem>
      <para>
       Indicates the path to the Home Manager configuration file. If not given,
-      <filename>$XDG_CONFIG_HOME/nixpkgs/home.nix</filename> is used.
+      <filename>$XDG_CONFIG_HOME/home-manager/home.nix</filename> is used.
      </para>
     </listitem>
    </varlistentry>

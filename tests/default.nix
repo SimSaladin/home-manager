@@ -47,6 +47,7 @@ import nmt {
   inherit lib pkgs modules;
   testedAttrPath = [ "home" "activationPackage" ];
   tests = builtins.foldl' (a: b: a // (import b)) { } ([
+    ./lib/generators
     ./lib/types
     ./modules/files
     ./modules/home-environment
@@ -117,6 +118,7 @@ import nmt {
     ./modules/programs/sm64ex
     ./modules/programs/ssh
     ./modules/programs/starship
+    ./modules/services/syncthing/common
     ./modules/programs/taskwarrior
     ./modules/programs/texlive
     ./modules/programs/tmate
@@ -188,6 +190,7 @@ import nmt {
     ./modules/services/mopidy
     ./modules/services/mpd
     ./modules/services/mpdris2
+    ./modules/services/mpd-mpris
     ./modules/services/pantalaimon
     ./modules/services/parcellite
     ./modules/services/pass-secret-service
@@ -200,7 +203,7 @@ import nmt {
     ./modules/services/screen-locker
     ./modules/services/swayidle
     ./modules/services/sxhkd
-    ./modules/services/syncthing
+    ./modules/services/syncthing/linux
     ./modules/services/trayer
     ./modules/services/twmn
     ./modules/services/udiskie
