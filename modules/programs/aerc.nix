@@ -3,27 +3,37 @@
 with lib;
 let
   cfg = config.programs.aerc;
+
   primitive = with types;
     ((type: either type (listOf type)) (nullOr (oneOf [ str int bool float ])))
     // {
       description =
-        "values (null, bool, int, string of float) or a list of values, that will be joined with a comma";
+        "values (null, bool, int, string, or float) or a list of values, that will be joined with a comma";
     };
+
   confSection = types.attrsOf primitive;
+
   confSections = types.attrsOf confSection;
+
   sectionsOrLines = types.either types.lines confSections;
+
   accounts = import ./aerc-accounts.nix {
     inherit config pkgs lib confSection confSections;
   };
+
   aerc-accounts =
     attrsets.filterAttrs (_: v: v.aerc.enable) config.accounts.email.accounts;
+
 in {
   meta.maintainers = with lib.hm.maintainers; [ lukasngl ];
 
   options.accounts.email.accounts = accounts.type;
+
   options.programs.aerc = {
 
     enable = mkEnableOption "aerc";
+
+    package = mkPackageOption pkgs "aerc" { };
 
     extraAccounts = mkOption {
       type = sectionsOrLines;
@@ -31,8 +41,9 @@ in {
       example = literalExpression
         ''{ Work = { source = "maildir://~/Maildir/work"; }; }'';
       description = ''
-        Extra lines added to <filename>$HOME/.config/aerc/accounts.conf</filename>.
-        See aerc-config(5).
+        Extra lines added to {file}`$HOME/.config/aerc/accounts.conf`.
+
+        See {manpage}`aerc-config(5)`.
       '';
     };
 
@@ -41,9 +52,10 @@ in {
       default = { };
       example = literalExpression ''{ messages = { q = ":quit<Enter>"; }; }'';
       description = ''
-        Extra lines added to <filename>$HOME/.config/aerc/binds.conf</filename>.
+        Extra lines added to {file}`$HOME/.config/aerc/binds.conf`.
         Global keybindings can be set in the `global` section.
-        See aerc-config(5).
+
+        See {manpage}`aerc-config(5)`.
       '';
     };
 
@@ -52,8 +64,9 @@ in {
       default = { };
       example = literalExpression ''{ ui = { sort = "-r date"; }; }'';
       description = ''
-        Extra lines added to <filename>$HOME/.config/aerc/aerc.conf</filename>.
-        See aerc-config(5).
+        Extra lines added to {file}`$HOME/.config/aerc/aerc.conf`.
+
+        See {manpage}`aerc-config(5)`.
       '';
     };
 
@@ -64,10 +77,12 @@ in {
         { default = { ui = { "tab.selected.reverse" = toggle; }; }; };
       '';
       description = ''
-        Stylesets added to <filename>$HOME/.config/aerc/stylesets/</filename>.
-        See aerc-stylesets(7).
+        Stylesets added to {file}`$HOME/.config/aerc/stylesets/`.
+
+        See {manpage}`aerc-stylesets(7)`.
       '';
     };
+
     templates = mkOption {
       type = with types; attrsOf lines;
       default = { };
@@ -75,23 +90,22 @@ in {
         { new_message = "Hello!"; };
       '';
       description = ''
-        Templates added to <filename>$HOME/.config/aerc/templates/</filename>.
-        See aerc-templates(7).
+        Templates added to {file}`$HOME/.config/aerc/templates/`.
+
+        See {manpage}`aerc-templates(7)`.
       '';
     };
   };
 
   config = let
-    joinCfg = cfgs:
-      with builtins;
-      concatStringsSep "\n" (filter (v: v != "") cfgs);
+    joinCfg = cfgs: concatStringsSep "\n" (filter (v: v != "") cfgs);
+
     toINI = conf: # quirk: global section is prepended w/o section heading
       let
         global = conf.global or { };
         local = removeAttrs conf [ "global" ];
         optNewLine = if global != { } && local != { } then "\n" else "";
         mkValueString = v:
-          with builtins;
           if isList v then # join with comma
             concatStringsSep "," (map (generators.mkValueStringDefault { }) v)
           else
@@ -102,64 +116,106 @@ in {
         (generators.toKeyValue { inherit mkKeyValue; } global)
         (generators.toINI { inherit mkKeyValue; } local)
       ];
-    mkINI = conf: if builtins.isString conf then conf else toINI conf;
+
+    mkINI = conf: if isString conf then conf else toINI conf;
+
     mkStyleset = attrsets.mapAttrs' (k: v:
-      let value = if builtins.isString v then v else toINI { global = v; };
+      let value = if isString v then v else toINI { global = v; };
       in {
         name = "aerc/stylesets/${k}";
         value.text = joinCfg [ header value ];
       });
+
     mkTemplates = attrsets.mapAttrs' (k: v: {
       name = "aerc/templates/${k}";
       value.text = v;
     });
-    accountsExtraAccounts = builtins.mapAttrs accounts.mkAccount aerc-accounts;
-    accountsExtraConfig =
-      builtins.mapAttrs accounts.mkAccountConfig aerc-accounts;
-    accountsExtraBinds =
-      builtins.mapAttrs accounts.mkAccountBinds aerc-accounts;
-    joinContextual = contextual:
-      with builtins;
-      joinCfg (map mkINI (attrValues contextual));
+
+    primaryAccount = attrsets.filterAttrs (_: v: v.primary) aerc-accounts;
+    otherAccounts = attrsets.filterAttrs (_: v: !v.primary) aerc-accounts;
+
+    primaryAccountAccounts = mapAttrs accounts.mkAccount primaryAccount;
+
+    accountsExtraAccounts = mapAttrs accounts.mkAccount otherAccounts;
+
+    accountsExtraConfig = mapAttrs accounts.mkAccountConfig aerc-accounts;
+
+    accountsExtraBinds = mapAttrs accounts.mkAccountBinds aerc-accounts;
+
+    joinContextual = contextual: joinCfg (map mkINI (attrValues contextual));
+
+    isRecursivelyEmpty = x:
+      if isAttrs x then
+        all (x: x == { } || isRecursivelyEmpty x) (attrValues x)
+      else
+        false;
+
+    genAccountsConf = ((cfg.extraAccounts != "" && cfg.extraAccounts != { })
+      || !(isRecursivelyEmpty accountsExtraAccounts)
+      || !(isRecursivelyEmpty primaryAccountAccounts));
+
+    genAercConf = ((cfg.extraConfig != "" && cfg.extraConfig != { })
+      || !(isRecursivelyEmpty accountsExtraConfig));
+
+    genBindsConf = ((cfg.extraBinds != "" && cfg.extraBinds != { })
+      || !(isRecursivelyEmpty accountsExtraBinds));
+
     header = ''
       # Generated by Home Manager.
     '';
+
   in mkIf cfg.enable {
-    warnings = if ((cfg.extraAccounts != "" && cfg.extraAccounts != { })
-      || accountsExtraAccounts != { })
+    warnings = if genAccountsConf
     && (cfg.extraConfig.general.unsafe-accounts-conf or false) == false then [''
-      aerc: An email account was configured, but `extraConfig.general.unsafe-accounts-conf` is set to false or unset.
-      This will prevent aerc from starting, see `unsafe-accounts-conf` in aerc-config(5) for details.
-      Consider setting the option `extraConfig.general.unsafe-accounts-conf` to true.
+      aerc: `programs.aerc.enable` is set, but `...extraConfig.general.unsafe-accounts-conf` is set to false or unset.
+      This will prevent aerc from starting; see `unsafe-accounts-conf` in the man page aerc-config(5):
+      > By default, the file permissions of accounts.conf must be restrictive and only allow reading by the file owner (0600).
+      > Set this option to true to ignore this permission check. Use this with care as it may expose your credentials.
+      These permissions are not possible with home-manager, since the generated file is in the nix-store (permissions 0444).
+      Therefore, please set `programs.aerc.extraConfig.general.unsafe-accounts-conf = true`.
+      This option is safe; if `passwordCommand` is properly set, no credentials will be written to the nix store.
     ''] else
       [ ];
-    home.packages = [ pkgs.aerc ];
+
+    assertions = [{
+      assertion = let
+        extraConfigSections = (unique (flatten
+          (mapAttrsToList (_: v: attrNames v.aerc.extraConfig) aerc-accounts)));
+      in extraConfigSections == [ ] || extraConfigSections == [ "ui" ];
+      message = ''
+        Only the ui section of $XDG_CONFIG_HOME/aerc.conf supports contextual (per-account) configuration.
+        Please configure it with accounts.email.accounts._.aerc.extraConfig.ui and move any other
+        configuration to programs.aerc.extraConfig.
+      '';
+    }];
+
+    home.packages = [ cfg.package ];
+
     xdg.configFile = {
-      "aerc/accounts.conf" = mkIf
-        ((cfg.extraAccounts != "" && cfg.extraAccounts != { })
-          || accountsExtraAccounts != { }) {
-            text = joinCfg [
-              header
-              (mkINI cfg.extraAccounts)
-              (mkINI accountsExtraAccounts)
-            ];
-          };
-      "aerc/aerc.conf" =
-        mkIf (cfg.extraConfig != "" && cfg.extraConfig != { }) {
-          text = joinCfg [
-            header
-            (mkINI cfg.extraConfig)
-            (joinContextual accountsExtraConfig)
-          ];
-        };
-      "aerc/binds.conf" = mkIf ((cfg.extraBinds != "" && cfg.extraBinds != { })
-        || accountsExtraBinds != { }) {
-          text = joinCfg [
-            header
-            (mkINI cfg.extraBinds)
-            (joinContextual accountsExtraBinds)
-          ];
-        };
+      "aerc/accounts.conf" = mkIf genAccountsConf {
+        text = joinCfg [
+          header
+          (mkINI cfg.extraAccounts)
+          (mkINI primaryAccountAccounts)
+          (mkINI accountsExtraAccounts)
+        ];
+      };
+
+      "aerc/aerc.conf" = mkIf genAercConf {
+        text = joinCfg [
+          header
+          (mkINI cfg.extraConfig)
+          (joinContextual accountsExtraConfig)
+        ];
+      };
+
+      "aerc/binds.conf" = mkIf genBindsConf {
+        text = joinCfg [
+          header
+          (mkINI cfg.extraBinds)
+          (joinContextual accountsExtraBinds)
+        ];
+      };
     } // (mkStyleset cfg.stylesets) // (mkTemplates cfg.templates);
   };
 }

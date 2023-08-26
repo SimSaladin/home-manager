@@ -8,6 +8,8 @@
         profiles = [ "first" ];
       };
 
+      aliases = [ "home-manager@example.com" ];
+
       gpg.key = "ABC";
 
       imap = {
@@ -35,6 +37,15 @@
       first = {
         isDefault = true;
         withExternalGnupg = true;
+        userChrome = ''
+          * { color: blue !important; }
+        '';
+        userContent = ''
+          * { color: red !important; }
+        '';
+        extraConfig = ''
+          user_pref("mail.html_compose", false);
+        '';
       };
 
       second.settings = { "second.setting" = "some-test-setting"; };
@@ -60,5 +71,13 @@
     assertFileExists home-files/.thunderbird/second/user.js
     assertFileContent home-files/.thunderbird/second/user.js \
       ${./thunderbird-expected-second.js}
+
+    assertFileExists home-files/.thunderbird/first/chrome/userChrome.css
+    assertFileContent home-files/.thunderbird/first/chrome/userChrome.css \
+      <(echo "* { color: blue !important; }")
+
+    assertFileExists home-files/.thunderbird/first/chrome/userContent.css
+    assertFileContent home-files/.thunderbird/first/chrome/userContent.css \
+      <(echo "* { color: red !important; }")
   '';
 }

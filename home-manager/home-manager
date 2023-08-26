@@ -11,11 +11,21 @@ export TEXTDOMAINDIR=@OUT@/share/locale
 # shellcheck disable=1091
 source @HOME_MANAGER_LIB@
 
+function nixProfileList() {
+    # We attempt to use `--json` first (added in Nix 2.17). Otherwise attempt to
+    # parse the legacy output format.
+    {
+        nix profile list --json 2>/dev/null \
+            | jq -r --arg name "$1" '.elements[].storePaths[] | select(endswith($name))'
+    } || {
+        nix profile list \
+            | { grep "$1\$" || test $? = 1; } \
+            | cut -d ' ' -f 4
+    }
+}
+
 function removeByName() {
-  nix profile list \
-      | { grep "$1" || test $? = 1; } \
-      | cut -d ' ' -f 4 \
-      | xargs -t $DRY_RUN_CMD nix profile remove $VERBOSE_ARG
+    nixProfileList "$1" | xargs -t $DRY_RUN_CMD nix profile remove $VERBOSE_ARG
 }
 
 function setNixProfileCommands() {
@@ -53,7 +63,7 @@ function setWorkDir() {
 # Checks whether the 'flakes' and 'nix-command' Nix options are enabled.
 function hasFlakeSupport() {
     type -p nix > /dev/null \
-        && nix show-config \
+        && nix show-config 2> /dev/null \
             | grep experimental-features \
             | grep flakes \
             | grep -q nix-command
@@ -77,7 +87,7 @@ function setConfigFile() {
         local hmConfigHome="$configHome/home-manager"
         local nixpkgsConfigHome="$configHome/nixpkgs"
         local defaultConfFile="$hmConfigHome/home.nix"
-        local configFlake
+        local configFile
 
         if [[ -e "$defaultConfFile" ]]; then
             configFile="$defaultConfFile"
@@ -93,7 +103,7 @@ function setConfigFile() {
                    'home.nix' "$HOME/.nixpkgs" "$hmConfigHome" >&2
         fi
 
-        if [[ $configFile ]]; then
+        if [[ -v configFile ]]; then
             HOME_MANAGER_CONFIG="$(realpath "$configFile")"
         else
             _i 'No configuration file found. Please create one at %s' \
@@ -104,31 +114,66 @@ function setConfigFile() {
 }
 
 function setHomeManagerNixPath() {
-    local path
-    for path in "@HOME_MANAGER_PATH@" \
-                "${XDG_CONFIG_HOME:-$HOME/.config}/nixpkgs/home-manager" \
-                "$HOME/.nixpkgs/home-manager" ; do
+    local path="@HOME_MANAGER_PATH@"
+
+    if [[ -n "$path" ]] ; then
         if [[ -e "$path" || "$path" =~ ^https?:// ]] ; then
             EXTRA_NIX_PATH+=("home-manager=$path")
             return
+        else
+            _iWarn 'Home Manager not found at %s.' "$path"
+        fi
+    fi
+
+    for p in "${XDG_CONFIG_HOME:-$HOME/.config}/nixpkgs/home-manager" \
+             "$HOME/.nixpkgs/home-manager" ; do
+        if [[ -e "$p" ]] ; then
+            # translators: This message will be seen by very few users that likely are familiar with English. So feel free to leave this untranslated.
+            _iWarn $'The fallback Home Manager path %s has been deprecated and a file/directory was found there.' \
+                   "$p"
+            # translators: This message will be seen by very few users that likely are familiar with English. So feel free to leave this untranslated.
+            _i $'To remove this warning, do one of the fallowing.
+
+1. Explicitly tell Home Manager to use the path, for example by adding
+
+     { programs.home-manager.path = "%s"; }
+
+   to your configuration.
+
+   If you import Home Manager directly, you can use the `path` parameter
+
+     pkgs.callPackage /path/to/home-manager-package { path = "%s"; }
+
+   when calling the Home Manager package.
+
+2. Remove the deprecated path.
+
+     $ rm -r "%s"' "$p" "$p" "$p"
         fi
     done
 }
 
 # Sets some useful Home Manager related paths as global read-only variables.
 function setHomeManagerPathVariables() {
-    declare -r nixStateDir="${NIX_STATE_DIR:-/nix/var/nix}"
-    declare -r globalProfilesDir="$nixStateDir/profiles/per-user/$USER"
-    declare -r globalGcrootsDir="$nixStateDir/gcroots/per-user/$USER"
+    declare -r globalNixStateDir="${NIX_STATE_DIR:-/nix/var/nix}"
+    declare -r globalProfilesDir="$globalNixStateDir/profiles/per-user/$USER"
+    declare -r globalGcrootsDir="$globalNixStateDir/gcroots/per-user/$USER"
+
+    declare -r stateHome="${XDG_STATE_HOME:-$HOME/.local/state}"
+    declare -r userNixStateDir="$stateHome/nix"
 
     declare -gr HM_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/home-manager"
-    declare -gr HM_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/home-manager"
+    declare -gr HM_STATE_DIR="$stateHome/home-manager"
     declare -gr HM_GCROOT_LEGACY_PATH="$globalGcrootsDir/current-home"
 
-    if [[ -d "$globalProfilesDir" ]]; then
+    if [[ -d $userNixStateDir/profiles ]]; then
+        declare -gr HM_PROFILE_DIR="$userNixStateDir/profiles"
+    elif [[ -d $globalProfilesDir ]]; then
         declare -gr HM_PROFILE_DIR="$globalProfilesDir"
     else
-        declare -gr HM_PROFILE_DIR="$HM_STATE_DIR/profiles"
+        _iError 'Could not find suitable profile directory, tried %s and %s' \
+                "$HM_STATE_DIR/profiles" "$globalProfilesDir" >&2
+        exit 1
     fi
 }
 
@@ -149,7 +194,7 @@ function setFlakeAttribute() {
         fi
 
         if [[ -v configFlake ]]; then
-            FLAKE_ARG="$(dirname "$(readlink -f "$configFlake")")"
+            FLAKE_ARG="path:$(dirname "$(readlink -f "$configFlake")")"
         fi
     fi
 
@@ -180,6 +225,7 @@ function setFlakeAttribute() {
 function doInspectOption() {
     setFlakeAttribute
     if [[ -v FLAKE_CONFIG_URI ]]; then
+        # translators: Here "flake" is a noun that refers to the Nix Flakes feature.
         _iError "Can't inspect options of a flake configuration"
         exit 1
     fi
@@ -308,7 +354,7 @@ $xdgVars
   # You should not change this value, even if you update Home Manager. If you do
   # want to update the value, then make sure to first check the Home Manager
   # release notes.
-  home.stateVersion = "22.11"; # Please read the comment before changing.
+  home.stateVersion = "23.05"; # Please read the comment before changing.
 
   # The home.packages option allows you to install Nix packages into your
   # environment.
@@ -398,7 +444,7 @@ EOF
       system = "$nixSystem";
       pkgs = nixpkgs.legacyPackages.\${system};
     in {
-      homeConfigurations.$USER = home-manager.lib.homeManagerConfiguration {
+      homeConfigurations."$USER" = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
 
         # Specify your home configuration modules here, for example,
@@ -436,6 +482,7 @@ EOF
 function doInstantiate() {
     setFlakeAttribute
     if [[ -v FLAKE_CONFIG_URI ]]; then
+        # translators: Here "flake" is a noun that refers to the Nix Flakes feature.
         _i "Can't instantiate a flake configuration" >&2
         exit 1
     fi
@@ -492,13 +539,16 @@ function doBuildFlake() {
         "${PASSTHROUGH_OPTS[@]}"
 }
 
-# Presents news to the user. Takes as argument the path to a "news
-# info" file as generated by `buildNews`.
+# Presents news to the user as specified by the `news.display` option.
 function presentNews() {
-    local infoFile="$1"
+    local newsNixFile="$WORK_DIR/news.nix"
+    buildNews "$newsNixFile"
 
-    # shellcheck source=/dev/null
-    . "$infoFile"
+    local newsDisplay
+    newsDisplay="$(nix-instantiate --eval --expr "(import ${newsNixFile}).meta.display" | xargs)"
+
+    local newsNumUnread
+    newsNumUnread="$(nix-instantiate --eval --expr "(import ${newsNixFile}).meta.numUnread" | xargs)"
 
     # shellcheck disable=2154
     if [[ $newsNumUnread -eq 0 ]]; then
@@ -518,7 +568,7 @@ function presentNews() {
         echo $'\n'"$msg"$'\n' >&2
 
         if [[ -v DISPLAY ]] && type -P notify-send > /dev/null; then
-            notify-send "Home Manager" "$msg"
+            notify-send "Home Manager" "$msg" > /dev/null 2>&1 || true
         fi
     elif [[ "$newsDisplay" == "show" ]]; then
         doShowNews --unread
@@ -564,12 +614,9 @@ function doBuild() {
             ${NO_OUT_LINK+--no-out-link} \
             --attr activationPackage \
         || return
-
-        local newsInfo
-        newsInfo=$(buildNews)
-
-        presentNews "$newsInfo"
     fi
+
+    presentNews
 }
 
 function doSwitch() {
@@ -595,12 +642,9 @@ function doSwitch() {
             --out-link "$generation" \
             --attr activationPackage \
             && "$generation/activate" || return
-
-        local newsInfo
-        newsInfo=$(buildNews)
-
-        presentNews "$newsInfo"
     fi
+
+    presentNews
 }
 
 function doListGens() {
@@ -681,61 +725,88 @@ function newsReadIdsFile() {
     echo "$path"
 }
 
-# Builds news meta information to be sourced into this script.
+# Builds the Home Manager news data file.
 #
 # Note, we suppress build output to remove unnecessary verbosity. We
 # put the output in the work directory to avoid the risk of an
 # unfortunately timed GC removing it.
 function buildNews() {
-    setFlakeAttribute
+    local newsNixFile="$1"
+    local newsJsonFile="$WORK_DIR/news.json"
+
     if [[ -v FLAKE_CONFIG_URI ]]; then
-        _iError "Sorry, this command is not yet supported in flake setup" >&2
-        exit 1
+        # TODO: Use check=false to make it more likely that the build succeeds.
+        doBuildFlake \
+            "$FLAKE_CONFIG_URI.config.news.json.output" \
+            --quiet \
+            --out-link "$newsJsonFile" \
+            || return
+    else
+        doBuildAttr \
+            --out-link "$newsJsonFile" \
+            --arg check false \
+            --attr config.news.json.output \
+            > /dev/null \
+        || return
     fi
 
-    local output
-    output="$WORK_DIR/news-info.sh"
+    local extraArgs=()
 
-    doBuildAttr \
-        --out-link "$output" \
-        --no-build-output \
-        --quiet \
-        --arg check false \
-        --argstr newsReadIdsFile "$(newsReadIdsFile)" \
-        --attr newsInfo \
-        > /dev/null
+    for p in "${EXTRA_NIX_PATH[@]}"; do
+        extraArgs=("${extraArgs[@]}" "-I" "$p")
+    done
 
-    echo "$output"
+    local readIdsFile
+    readIdsFile=$(newsReadIdsFile)
+
+    nix-instantiate \
+        --no-build-output --strict \
+        --eval '<home-manager/home-manager/build-news.nix>' \
+        --arg newsJsonFile "$newsJsonFile" \
+        --arg newsReadIdsFile "$readIdsFile" \
+        "${extraArgs[@]}" \
+        > "$newsNixFile"
 }
 
 function doShowNews() {
     setWorkDir
+    setFlakeAttribute
 
-    local infoFile
-    infoFile=$(buildNews) || return 1
+    local newsNixFile="$WORK_DIR/news.nix"
+    buildNews "$newsNixFile"
 
-    # shellcheck source=/dev/null
-    . "$infoFile"
+    local readIdsFile
+    readIdsFile=$(newsReadIdsFile)
 
-    # shellcheck disable=2154
+    local news
+
+    # shellcheck disable=2154,2046
     case $1 in
         --all)
-            ${PAGER:-less} "$newsFileAll"
+            news="$(nix-instantiate --quiet --eval --expr "(import ${newsNixFile}).news.all")"
             ;;
         --unread)
-            ${PAGER:-less} "$newsFileUnread"
+            news="$(nix-instantiate --quiet --eval --expr "(import ${newsNixFile}).news.unread")"
             ;;
         *)
             _i 'Unknown argument %s' "$1"
             return 1
     esac
 
-    # shellcheck disable=2154
-    if [[ -s "$newsUnreadIdsFile" ]]; then
-        local newsReadIdsFile
-        newsReadIdsFile="$(newsReadIdsFile)"
-        cat "$newsUnreadIdsFile" >> "$newsReadIdsFile"
-    fi
+    # Prints the news without surrounding quotes.
+    echo -e "${news:1:-1}" | ${PAGER:-less}
+
+    local allIds
+    allIds="$(nix-instantiate --quiet --eval --expr "(import ${newsNixFile}).meta.ids")"
+    allIds="${allIds:1:-1}"    # Trim surrounding quotes.
+
+    local readIdsFileNew="$WORK_DIR/news-read-ids.new"
+    {
+      cat "$readIdsFile"
+      echo -e "$allIds"
+    } | sort | uniq > "$readIdsFileNew"
+
+    mv -f "$readIdsFileNew" "$readIdsFile"
 }
 
 function doUninstall() {
@@ -760,6 +831,7 @@ function doUninstall() {
             echo "{ lib, ... }: {"  > "$HOME_MANAGER_CONFIG"
             echo "  home.file = lib.mkForce {};" >> "$HOME_MANAGER_CONFIG"
             echo "  home.stateVersion = \"18.09\";" >> "$HOME_MANAGER_CONFIG"
+            echo "  manual.manpages.enable = false;" >> "$HOME_MANAGER_CONFIG"
             echo "}" >> "$HOME_MANAGER_CONFIG"
             doSwitch
             $DRY_RUN_CMD $REMOVE_CMD home-manager-path || true
@@ -769,16 +841,16 @@ function doUninstall() {
                 $DRY_RUN_CMD rm $VERBOSE_ARG -r "$HM_DATA_HOME"
             fi
 
+            if [[ -e $HM_STATE_DIR ]]; then
+                $DRY_RUN_CMD rm $VERBOSE_ARG -r "$HM_STATE_DIR"
+            fi
+
             if [[ -e $HM_PROFILE_DIR ]]; then
                 $DRY_RUN_CMD rm $VERBOSE_ARG "$HM_PROFILE_DIR/home-manager"*
             fi
 
             if [[ -e $HM_GCROOT_LEGACY_PATH ]]; then
                 $DRY_RUN_CMD rm $VERBOSE_ARG "$HM_GCROOT_LEGACY_PATH"
-            fi
-
-            if [[ -e $HM_STATE_DIR ]]; then
-                $DRY_RUN_CMD rm $VERBOSE_ARG -r "$HM_STATE_DIR"
             fi
             ;;
         *)
@@ -873,7 +945,6 @@ COMMAND=""
 COMMAND_ARGS=()
 FLAKE_ARG=""
 
-setHomeManagerNixPath
 setHomeManagerPathVariables
 
 while [[ $# -gt 0 ]]; do
@@ -951,7 +1022,7 @@ while [[ $# -gt 0 ]]; do
             export VERBOSE=1
             ;;
         --version)
-            echo 23.05-pre
+            echo 23.11-pre
             exit 0
             ;;
         *)
@@ -968,6 +1039,8 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+setHomeManagerNixPath
 
 if [[ -z $COMMAND ]]; then
     doHelp >&2

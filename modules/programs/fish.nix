@@ -12,10 +12,10 @@ let
         type = types.path;
         description = ''
           Path to the plugin folder.
-          </para><para>
+
           Relevant pieces will be added to the fish function path and
-          the completion path. The <filename>init.fish</filename> and
-          <filename>key_binding.fish</filename> files are sourced if
+          the completion path. The {file}`init.fish` and
+          {file}`key_binding.fish` files are sourced if
           they exist.
         '';
       };
@@ -89,7 +89,7 @@ let
         default = null;
         description = ''
           Tells fish to run this function when the job with the specified group
-          ID exits. Instead of a PID, the stringer <literal>caller</literal> can
+          ID exits. Instead of a PID, the stringer `caller` can
           be specified. This is only legal when in a command substitution, and
           will result in the handler being triggered by the exit of the job
           which created this command substitution.
@@ -103,8 +103,8 @@ let
         description = ''
           Tells fish to run this function when the fish child process with the
           specified process ID exits. Instead of a PID, for backwards
-          compatibility, <literal>%self</literal> can be specified as an alias
-          for <literal>$fish_pid</literal>, and the function will be run when
+          compatibility, `%self` can be specified as an alias
+          for `$fish_pid`, and the function will be run when
           the current fish instance exits.
         '';
       };
@@ -151,6 +151,13 @@ let
       inherit text;
       passAsFile = [ "text" ];
     } "env HOME=$(mktemp -d) fish_indent < $textPath > $out";
+
+  translatedSessionVariables =
+    pkgs.runCommandLocal "hm-session-vars.fish" { } ''
+      ${pkgs.buildPackages.babelfish}/bin/babelfish \
+        <${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh \
+        >$out
+    '';
 
 in {
   imports = [
@@ -263,7 +270,7 @@ in {
       '';
       description = ''
         The plugins to source in
-        <filename>conf.d/99plugins.fish</filename>.
+        {file}`conf.d/99plugins.fish`.
       '';
     };
 
@@ -282,7 +289,7 @@ in {
       '';
       description = ''
         Basic functions to add to fish. For more information see
-        <link xlink:href="https://fishshell.com/docs/current/cmds/function.html"/>.
+        <https://fishshell.com/docs/current/cmds/function.html>.
       '';
     };
   };
@@ -315,17 +322,21 @@ in {
 
         generateCompletions = package:
           pkgs.runCommand "${package.name}-fish-completions" {
-            src = package;
+            srcs = [ package ] ++ filter (p: p != null)
+              (builtins.map (outName: package.${outName} or null)
+                config.home.extraOutputsToInstall);
             nativeBuildInputs = [ pkgs.python3 ];
             buildInputs = [ cfg.package ];
             preferLocalBuild = true;
           } ''
             mkdir -p $out
-            if [ -d $src/share/man ]; then
-              find $src/share/man -type f \
-                | xargs python ${cfg.package}/share/fish/tools/create_manpage_completions.py --directory $out \
-                > /dev/null
-            fi
+            for src in $srcs; do
+              if [ -d $src/share/man ]; then
+                find -L $src/share/man -type f \
+                  | xargs python ${cfg.package}/share/fish/tools/create_manpage_completions.py --directory $out \
+                  > /dev/null
+              fi
+            done
           '';
       in destructiveSymlinkJoin {
         name = "${config.home.username}-fish-completions";
@@ -354,9 +365,7 @@ in {
         set -q __fish_home_manager_config_sourced; and exit
         set -g __fish_home_manager_config_sourced 1
 
-        set --prepend fish_function_path ${pkgs.fishPlugins.foreign-env}/share/fish/vendor_functions.d
-        fenv source ${config.home.profileDirectory}/etc/profile.d/hm-session-vars.sh > /dev/null
-        set -e fish_function_path[1]
+        source ${translatedSessionVariables}
 
         ${cfg.shellInit}
 

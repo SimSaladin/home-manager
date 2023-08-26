@@ -7,11 +7,6 @@ let
   cfg = config.programs.zellij;
   yamlFormat = pkgs.formats.yaml { };
 
-  configDir = if pkgs.stdenv.isDarwin then
-    "Library/Application Support/org.Zellij-Contributors.Zellij"
-  else
-    "${config.xdg.configHome}/zellij";
-
 in {
   meta.maintainers = [ hm.maintainers.mainrs ];
 
@@ -38,11 +33,23 @@ in {
       '';
       description = ''
         Configuration written to
-        <filename>$XDG_CONFIG_HOME/zellij/config.yaml</filename>.
-        </para><para>
-        See <link xlink:href="https://zellij.dev/documentation" /> for the full
+        {file}`$XDG_CONFIG_HOME/zellij/config.yaml`.
+
+        See <https://zellij.dev/documentation> for the full
         list of options.
       '';
+    };
+
+    enableBashIntegration = mkEnableOption "Bash integration" // {
+      default = false;
+    };
+
+    enableZshIntegration = mkEnableOption "Zsh integration" // {
+      default = false;
+    };
+
+    enableFishIntegration = mkEnableOption "Fish integration" // {
+      default = false;
     };
   };
 
@@ -51,14 +58,27 @@ in {
 
     # Zellij switched from yaml to KDL in version 0.32.0:
     # https://github.com/zellij-org/zellij/releases/tag/v0.32.0
-    home.file."${configDir}/config.yaml" = mkIf
+    xdg.configFile."zellij/config.yaml" = mkIf
       (cfg.settings != { } && (versionOlder cfg.package.version "0.32.0")) {
         source = yamlFormat.generate "zellij.yaml" cfg.settings;
       };
 
-    home.file."${configDir}/config.kdl" = mkIf
+    xdg.configFile."zellij/config.kdl" = mkIf
       (cfg.settings != { } && (versionAtLeast cfg.package.version "0.32.0")) {
         text = lib.hm.generators.toKDL { } cfg.settings;
       };
+
+    programs.bash.initExtra = mkIf cfg.enableBashIntegration (mkOrder 200 ''
+      eval "$(zellij setup --generate-auto-start bash)"
+    '');
+
+    programs.zsh.initExtra = mkIf cfg.enableZshIntegration (mkOrder 200 ''
+      eval "$(zellij setup --generate-auto-start zsh)"
+    '');
+
+    programs.fish.interactiveShellInit = mkIf cfg.enableFishIntegration
+      (mkOrder 200 ''
+        eval (zellij setup --generate-auto-start fish | string collect)
+      '');
   };
 }

@@ -13,8 +13,22 @@
     '';
 
     envFile.text = ''
-      let-env FOO = 'BAR'
+      $env.FOO = 'BAR'
     '';
+
+    loginFile.text = ''
+      # Prints "Hello, World" upon logging into tty1
+      if (tty) == "/dev/tty1" {
+        echo "Hello, World"
+      }
+    '';
+
+    shellAliases = {
+      "lsname" = "(ls | get name)";
+      "ll" = "ls -a";
+    };
+
+    environmentVariables = { BAR = "$'(echo BAZ)'"; };
   };
 
   test.stubs.nushell = { };
@@ -31,5 +45,8 @@
     assertFileContent \
       "${configDir}/env.nu" \
       ${./env-expected.nu}
+    assertFileContent \
+      "${configDir}/login.nu" \
+      ${./login-expected.nu}
   '';
 }

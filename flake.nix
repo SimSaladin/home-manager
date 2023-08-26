@@ -1,10 +1,9 @@
 {
   description = "Home Manager for Nix";
 
-  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-  inputs.utils.url = "github:numtide/flake-utils";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-  outputs = { self, nixpkgs, utils, ... }:
+  outputs = { self, nixpkgs, ... }:
     {
       nixosModules = rec {
         home-manager = import ./nixos;
@@ -56,7 +55,7 @@
                 - 'system'
 
               have been removed. Instead use the arguments 'pkgs' and
-              'modules'. See the 22.11 release notes for more: https://nix-community.github.io/home-manager/release-notes.html#sec-release-22.11-highlights 
+              'modules'. See the 22.11 release notes for more: https://nix-community.github.io/home-manager/release-notes.html#sec-release-22.11-highlights
             '';
 
             throwForRemovedArgs = v:
@@ -79,28 +78,46 @@
           in throwForRemovedArgs (import ./modules {
             inherit pkgs lib check extraSpecialArgs;
             configuration = { ... }: {
-              imports = modules;
+              imports = modules
+                ++ [{ programs.home-manager.path = toString ./.; }];
               nixpkgs = { inherit (pkgs) config overlays; };
             };
           });
       };
-    } // utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = nixpkgs.legacyPackages.${system};
-        docs = import ./docs { inherit pkgs; };
-        tests = import ./tests { inherit pkgs; };
-        hmPkg = pkgs.callPackage ./home-manager { };
-      in {
-        devShells.tests = tests.run;
-        packages = {
+    } // (let
+      forAllSystems = nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed;
+    in {
+      devShells = forAllSystems (system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+          tests = import ./tests { inherit pkgs; };
+        in tests.run);
+
+      formatter = forAllSystems (system:
+        let pkgs = nixpkgs.legacyPackages.${system};
+        in pkgs.linkFarm "format" [{
+          name = "bin/format";
+          path = ./format;
+        }]);
+
+      packages = forAllSystems (system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+          releaseInfo = nixpkgs.lib.importJSON ./release.json;
+          docs = import ./docs {
+            inherit pkgs;
+            inherit (releaseInfo) release isReleaseBranch;
+          };
+          hmPkg = pkgs.callPackage ./home-manager { path = toString ./.; };
+        in {
           default = hmPkg;
           home-manager = hmPkg;
 
           docs-html = docs.manual.html;
           docs-json = docs.options.json;
           docs-manpages = docs.manPages;
-        };
-        # deprecated in Nix 2.7
-        defaultPackage = self.packages.${system}.default;
-      });
+        });
+
+      defaultPackage = forAllSystems (system: self.packages.${system}.default);
+    });
 }

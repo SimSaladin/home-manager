@@ -9,7 +9,7 @@ let
   yamlFormat = pkgs.formats.yaml { };
 
 in {
-  meta.maintainers = [ maintainers.rycee ];
+  meta.maintainers = with maintainers; [ rycee Scrumplex ];
 
   options = {
     programs.beets = {
@@ -22,9 +22,9 @@ in {
         defaultText = "false";
         description = ''
           Whether to enable the beets music library manager. This
-          defaults to <literal>false</literal> for state
+          defaults to `false` for state
           version ≥ 19.03. For earlier versions beets is enabled if
-          <option>programs.beets.settings</option> is non-empty.
+          {option}`programs.beets.settings` is non-empty.
         '';
       };
 
@@ -35,7 +35,7 @@ in {
         example =
           literalExpression "(pkgs.beets.override { enableCheck = true; })";
         description = ''
-          The <literal>beets</literal> package to use.
+          The `beets` package to use.
           Can be used to specify extensions.
         '';
       };
@@ -45,16 +45,66 @@ in {
         default = { };
         description = ''
           Configuration written to
-          <filename>$XDG_CONFIG_HOME/beets/config.yaml</filename>
+          {file}`$XDG_CONFIG_HOME/beets/config.yaml`
         '';
+      };
+
+      mpdIntegration = {
+        enableStats = mkEnableOption "mpdstats plugin and service";
+
+        enableUpdate = mkEnableOption "mpdupdate plugin";
+
+        host = mkOption {
+          type = types.str;
+          default = "localhost";
+          example = "10.0.0.42";
+          description = "The host that mpdstats will connect to.";
+        };
+
+        port = mkOption {
+          type = types.port;
+          default = config.services.mpd.network.port;
+          defaultText = literalExpression "config.services.mpd.network.port";
+          example = 6601;
+          description = "The port that mpdstats will connect to.";
+        };
       };
     };
   };
 
-  config = mkIf cfg.enable {
-    home.packages = [ cfg.package ];
+  config = mkMerge [
+    (mkIf cfg.enable {
+      home.packages = [ cfg.package ];
 
-    xdg.configFile."beets/config.yaml".source =
-      yamlFormat.generate "beets-config" cfg.settings;
-  };
+      xdg.configFile."beets/config.yaml".source =
+        yamlFormat.generate "beets-config" cfg.settings;
+    })
+
+    (mkIf (cfg.mpdIntegration.enableStats || cfg.mpdIntegration.enableUpdate) {
+      programs.beets.settings.mpd = {
+        host = cfg.mpdIntegration.host;
+        port = cfg.mpdIntegration.port;
+      };
+    })
+
+    (mkIf cfg.mpdIntegration.enableStats {
+      programs.beets.settings.plugins = [ "mpdstats" ];
+    })
+
+    (mkIf cfg.mpdIntegration.enableUpdate {
+      programs.beets.settings.plugins = [ "mpdupdate" ];
+    })
+
+    (mkIf (cfg.enable && cfg.mpdIntegration.enableStats) {
+      systemd.user.services."beets-mpdstats" = {
+        Unit = {
+          Description = "Beets MPDStats daemon";
+          After = optional config.services.mpd.enable "mpd.service";
+          Requires = optional config.services.mpd.enable "mpd.service";
+        };
+        Service.ExecStart = "${cfg.package}/bin/beet mpdstats";
+        Install.WantedBy = [ "default.target" ];
+      };
+    })
+  ];
 }

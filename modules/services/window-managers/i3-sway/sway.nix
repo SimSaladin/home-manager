@@ -123,9 +123,9 @@ let
         defaultText = "Default sway keybindings.";
         description = ''
           An attribute set that assigns a key press to an action using a key symbol.
-          See <link xlink:href="https://i3wm.org/docs/userguide.html#keybindings"/>.
-          </para><para>
-          Consider to use <code>lib.mkOptionDefault</code> function to extend or override
+          See <https://i3wm.org/docs/userguide.html#keybindings>.
+
+          Consider to use `lib.mkOptionDefault` function to extend or override
           default keybindings instead of specifying all of them from scratch.
         '';
         example = literalExpression ''
@@ -144,7 +144,7 @@ let
         default = false;
         example = true;
         description = ''
-          Whether to make use of <option>--to-code</option> in keybindings.
+          Whether to make use of {option}`--to-code` in keybindings.
         '';
       };
 
@@ -154,10 +154,7 @@ let
         example = { "*" = { xkb_variant = "dvorak"; }; };
         description = ''
           An attribute set that defines input modules. See
-          <citerefentry>
-            <refentrytitle>sway-input</refentrytitle>
-            <manvolnum>5</manvolnum>
-          </citerefentry>
+          {manpage}`sway-input(5)`
           for options.
         '';
       };
@@ -168,10 +165,7 @@ let
         example = { "HDMI-A-2" = { bg = "~/path/to/background.png fill"; }; };
         description = ''
           An attribute set that defines output modules. See
-          <citerefentry>
-            <refentrytitle>sway-output</refentrytitle>
-            <manvolnum>5</manvolnum>
-          </citerefentry>
+          {manpage}`sway-output(5)`
           for options.
         '';
       };
@@ -182,10 +176,7 @@ let
         example = { "*" = { hide_cursor = "when-typing enable"; }; };
         description = ''
           An attribute set that defines seat modules. See
-          <citerefentry>
-            <refentrytitle>sway-input</refentrytitle>
-            <manvolnum>5</manvolnum>
-          </citerefentry>
+          {manpage}`sway-input(5)`
           for options.
         '';
       };
@@ -316,8 +307,8 @@ let
           ++ map workspaceOutputStr workspaceOutputAssign # custom mapping
         )
       else
-        [ ]) ++ (optional cfg.systemdIntegration ''
-          exec "${pkgs.dbus}/bin/dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP XDG_SESSION_TYPE; systemctl --user start sway-session.target"'')
+        [ ]) ++ (optional cfg.systemd.enable ''
+          exec "${pkgs.dbus}/bin/dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP XDG_SESSION_TYPE NIXOS_OZONE_WL; systemctl --user start sway-session.target"'')
       ++ (optional (!cfg.xwayland) "xwayland disable") ++ [ cfg.extraConfig ]));
 
   defaultSwayPackage = pkgs.sway.override {
@@ -328,7 +319,19 @@ let
   };
 
 in {
-  meta.maintainers = with maintainers; [ alexarice sumnerevans sebtm oxalica ];
+  meta.maintainers = with maintainers; [
+    Scrumplex
+    alexarice
+    sumnerevans
+    sebtm
+    oxalica
+  ];
+
+  imports = let modulePath = [ "wayland" "windowManager" "sway" ];
+  in [
+    (mkRenamedOptionModule (modulePath ++ [ "systemdIntegration" ])
+      (modulePath ++ [ "systemd" "enable" ]))
+  ];
 
   options.wayland.windowManager.sway = {
     enable = mkEnableOption "sway wayland compositor";
@@ -340,28 +343,33 @@ in {
       description = ''
         Sway package to use. Will override the options
         'wrapperFeatures', 'extraSessionCommands', and 'extraOptions'.
-        Set to <code>null</code> to not add any Sway package to your
+        Set to `null` to not add any Sway package to your
         path. This should be done if you want to use the NixOS Sway
         module to install Sway.
       '';
     };
 
-    systemdIntegration = mkOption {
-      type = types.bool;
-      default = pkgs.stdenv.isLinux;
-      example = false;
-      description = ''
-        Whether to enable <filename>sway-session.target</filename> on
-        sway startup. This links to
-        <filename>graphical-session.target</filename>.
-        Some important environment variables will be imported to systemd
-        and dbus user environment before reaching the target, including
-        <itemizedlist>
-          <listitem><para><literal>DISPLAY</literal></para></listitem>
-          <listitem><para><literal>WAYLAND_DISPLAY</literal></para></listitem>
-          <listitem><para><literal>SWAYSOCK</literal></para></listitem>
-          <listitem><para><literal>XDG_CURRENT_DESKTOP</literal></para></listitem>
-        </itemizedlist>
+    systemd = {
+      enable = mkOption {
+        type = types.bool;
+        default = pkgs.stdenv.isLinux;
+        example = false;
+        description = ''
+          Whether to enable {file}`sway-session.target` on
+          sway startup. This links to
+          {file}`graphical-session.target`.
+          Some important environment variables will be imported to systemd
+          and dbus user environment before reaching the target, including
+          * {env}`DISPLAY`
+          * {env}`WAYLAND_DISPLAY`
+          * {env}`SWAYSOCK`
+          * {env}`XDG_CURRENT_DESKTOP`
+        '';
+      };
+
+      xdgAutostart = mkEnableOption ''
+        autostart of applications using
+        {manpage}`systemd-xdg-autostart-generator(8)`
       '';
     };
 
@@ -469,13 +477,16 @@ in {
         '';
       };
 
-      systemd.user.targets.sway-session = mkIf cfg.systemdIntegration {
+      systemd.user.targets.sway-session = mkIf cfg.systemd.enable {
         Unit = {
           Description = "sway compositor session";
           Documentation = [ "man:systemd.special(7)" ];
           BindsTo = [ "graphical-session.target" ];
-          Wants = [ "graphical-session-pre.target" ];
+          Wants = [ "graphical-session-pre.target" ]
+            ++ optional cfg.systemd.xdgAutostart "xdg-desktop-autostart.target";
           After = [ "graphical-session-pre.target" ];
+          Before =
+            optional cfg.systemd.xdgAutostart "xdg-desktop-autostart.target";
         };
       };
 

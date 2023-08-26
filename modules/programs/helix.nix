@@ -18,41 +18,73 @@ in {
       description = "The package to use for helix.";
     };
 
+    defaultEditor = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Whether to configure {command}`hx` as the default
+        editor using the {env}`EDITOR` environment variable.
+      '';
+    };
+
     settings = mkOption {
       type = tomlFormat.type;
       default = { };
       example = literalExpression ''
         {
           theme = "base16";
-          lsp.display-messages = true;
+          editor = {
+            line-number = "relative";
+            lsp.display-messages = true;
+          };
           keys.normal = {
             space.space = "file_picker";
             space.w = ":w";
             space.q = ":q";
+            esc = [ "collapse_selection" "keep_primary_selection" ];
           };
         }
       '';
       description = ''
         Configuration written to
-        <filename>$XDG_CONFIG_HOME/helix/config.toml</filename>.
-        </para><para>
-        See <link xlink:href="https://docs.helix-editor.com/configuration.html" />
+        {file}`$XDG_CONFIG_HOME/helix/config.toml`.
+
+        See <https://docs.helix-editor.com/configuration.html>
         for the full list of options.
       '';
     };
 
     languages = mkOption {
-      type = types.listOf tomlFormat.type;
-      default = [ ];
-      example = [{
-        name = "rust";
-        auto-format = false;
-      }];
+      type = with types;
+        coercedTo (listOf tomlFormat.type) (language:
+          lib.warn ''
+            The syntax of programs.helix.languages has changed.
+            It now generates the whole languages.toml file instead of just the language array in that file.
+
+            Use
+            programs.helix.languages = { language = <languages list>; }
+            instead.
+          '' { inherit language; }) (addCheck tomlFormat.type builtins.isAttrs);
+      default = { };
+      example = literalExpression ''
+        {
+          # the language-server option currently requires helix from the master branch at https://github.com/helix-editor/helix/
+          language-server.typescript-language-server = with pkgs.nodePackages; {
+            command = "''${typescript-language-server}/bin/typescript-language-server";
+            args = [ "--stdio" "--tsserver-path=''${typescript}/lib/node_modules/typescript/lib" ];
+          };
+
+          language = [{
+            name = "rust";
+            auto-format = false;
+          }];
+        }
+      '';
       description = ''
         Language specific configuration at
-        <filename>$XDG_CONFIG_HOME/helix/languages.toml</filename>.
-        </para><para>
-        See <link xlink:href="https://docs.helix-editor.com/languages.html" />
+        {file}`$XDG_CONFIG_HOME/helix/languages.toml`.
+
+        See <https://docs.helix-editor.com/languages.html>
         for more information.
       '';
     };
@@ -119,10 +151,10 @@ in {
       '';
       description = ''
         Each theme is written to
-        <filename>$XDG_CONFIG_HOME/helix/themes/theme-name.toml</filename>.
+        {file}`$XDG_CONFIG_HOME/helix/themes/theme-name.toml`.
         Where the name of each attribute is the theme-name (in the example "base16").
-        </para><para>
-        See <link xlink:href="https://docs.helix-editor.com/themes.html" />
+
+        See <https://docs.helix-editor.com/themes.html>
         for the full list of options.
       '';
     };
@@ -131,14 +163,15 @@ in {
   config = mkIf cfg.enable {
     home.packages = [ cfg.package ];
 
+    home.sessionVariables = mkIf cfg.defaultEditor { EDITOR = "hx"; };
+
     xdg.configFile = let
       settings = {
         "helix/config.toml" = mkIf (cfg.settings != { }) {
           source = tomlFormat.generate "helix-config" cfg.settings;
         };
-        "helix/languages.toml" = mkIf (cfg.languages != [ ]) {
-          source =
-            tomlFormat.generate "helix-config" { language = cfg.languages; };
+        "helix/languages.toml" = mkIf (cfg.languages != { }) {
+          source = tomlFormat.generate "helix-languages-config" cfg.languages;
         };
       };
 

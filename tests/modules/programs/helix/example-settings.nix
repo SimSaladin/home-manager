@@ -9,18 +9,39 @@ with lib;
 
       settings = {
         theme = "base16";
-        lsp.display-messages = true;
+        editor = {
+          line-number = "relative";
+          lsp.display-messages = true;
+        };
         keys.normal = {
           space.space = "file_picker";
           space.w = ":w";
           space.q = ":q";
+          esc = [ "collapse_selection" "keep_primary_selection" ];
         };
       };
 
-      languages = [{
-        name = "rust";
-        auto-format = false;
-      }];
+      languages = {
+        language-server.typescript-language-server = let
+          typescript-language-server = config.lib.test.mkStubPackage {
+            outPath = "@typescript-language-server@";
+          };
+          typescript =
+            config.lib.test.mkStubPackage { outPath = "@typescript@"; };
+        in {
+          command =
+            "${typescript-language-server}/bin/typescript-language-server";
+          args = [
+            "--stdio"
+            "--tsserver-path=${typescript}/lib/node_modules/typescript/lib"
+          ];
+        };
+
+        language = [{
+          name = "rust";
+          auto-format = false;
+        }];
+      };
 
       themes = {
         base16 = let

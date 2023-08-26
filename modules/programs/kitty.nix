@@ -26,6 +26,33 @@ let
   toKittyEnv =
     generators.toKeyValue { mkKeyValue = name: value: "env ${name}=${value}"; };
 
+  shellIntegrationInit = {
+    bash = ''
+      if test -n "$KITTY_INSTALLATION_DIR"; then
+        source "$KITTY_INSTALLATION_DIR/shell-integration/bash/kitty.bash"
+      fi
+    '';
+    fish = ''
+      if set -q KITTY_INSTALLATION_DIR
+        source "$KITTY_INSTALLATION_DIR/shell-integration/fish/vendor_conf.d/kitty-shell-integration.fish"
+        set --prepend fish_complete_path "$KITTY_INSTALLATION_DIR/shell-integration/fish/vendor_completions.d"
+      end
+    '';
+    zsh = ''
+      if test -n "$KITTY_INSTALLATION_DIR"; then
+        autoload -Uz -- "$KITTY_INSTALLATION_DIR"/shell-integration/zsh/kitty-integration
+        kitty-integration
+        unfunction kitty-integration
+      fi
+    '';
+  };
+
+  shellIntegrationDefaultOpt = {
+    default = cfg.shellIntegration.mode != "disabled";
+    defaultText = literalExpression ''
+      config.programs.kitty.shellIntegration.mode != "disabled"
+    '';
+  };
 in {
   options.programs.kitty = {
     enable = mkEnableOption "Kitty terminal emulator";
@@ -64,8 +91,8 @@ in {
       '';
       description = ''
         Configuration written to
-        <filename>$XDG_CONFIG_HOME/kitty/kitty.conf</filename>. See
-        <link xlink:href="https://sw.kovidgoyal.net/kitty/conf.html" />
+        {file}`$XDG_CONFIG_HOME/kitty/kitty.conf`. See
+        <https://sw.kovidgoyal.net/kitty/conf.html>
         for the documentation.
       '';
     };
@@ -75,8 +102,8 @@ in {
       default = null;
       description = ''
         Apply a Kitty color theme. This option takes the friendly name of
-        any theme given by the command <command>kitty +kitten themes</command>.
-        See <link xlink:href="https://github.com/kovidgoyal/kitty-themes"/>
+        any theme given by the command {command}`kitty +kitten themes`.
+        See <https://github.com/kovidgoyal/kitty-themes>
         for more details.
       '';
       example = "Space Gray Eighties";
@@ -111,6 +138,30 @@ in {
       '';
     };
 
+    shellIntegration = {
+      mode = mkOption {
+        type = types.str;
+        default = "enabled";
+        example = "no-cursor";
+        description = ''
+          Set the mode of the shell integration. This accepts the same options
+          as the `shell_integration` option of Kitty. Note that
+          `no-rc` is always implied. See
+          <https://sw.kovidgoyal.net/kitty/shell-integration>
+          for more details.
+        '';
+      };
+
+      enableBashIntegration = mkEnableOption "Kitty Bash integration"
+        // shellIntegrationDefaultOpt;
+
+      enableFishIntegration = mkEnableOption "Kitty fish integration"
+        // shellIntegrationDefaultOpt;
+
+      enableZshIntegration = mkEnableOption "Kitty Z Shell integration"
+        // shellIntegrationDefaultOpt;
+    };
+
     extraConfig = mkOption {
       default = "";
       type = types.lines;
@@ -135,11 +186,19 @@ in {
 
         (optionalString (cfg.theme != null) ''
           include ${pkgs.kitty-themes}/share/kitty-themes/${
-            (head (filter (x: x.name == cfg.theme) (builtins.fromJSON
-              (builtins.readFile
-                "${pkgs.kitty-themes}/share/kitty-themes/themes.json")))).file
+            let
+              matching = filter (x: x.name == cfg.theme) (builtins.fromJSON
+                (builtins.readFile
+                  "${pkgs.kitty-themes}/share/kitty-themes/themes.json"));
+            in throwIf (length matching == 0)
+            "kitty-themes does not contain a theme named ${cfg.theme}"
+            (head matching).file
           }
         '')
+        ''
+          # Shell integration is sourced and configured manually
+          shell_integration no-rc ${cfg.shellIntegration.mode}
+        ''
         (toKittyConfig cfg.settings)
         (toKittyKeybindings cfg.keybindings)
         (toKittyEnv cfg.environment)
@@ -155,5 +214,14 @@ in {
       (cfg.darwinLaunchOptions != null && pkgs.stdenv.hostPlatform.isDarwin) {
         text = concatStringsSep " " cfg.darwinLaunchOptions;
       };
+
+    programs.bash.initExtra =
+      mkIf cfg.shellIntegration.enableBashIntegration shellIntegrationInit.bash;
+
+    programs.fish.interactiveShellInit =
+      mkIf cfg.shellIntegration.enableFishIntegration shellIntegrationInit.fish;
+
+    programs.zsh.initExtra =
+      mkIf cfg.shellIntegration.enableZshIntegration shellIntegrationInit.zsh;
   };
 }

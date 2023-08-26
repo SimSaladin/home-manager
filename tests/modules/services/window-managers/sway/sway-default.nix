@@ -14,5 +14,9 @@
     assertFileExists home-files/.config/sway/config
     assertFileContent $(normalizeStorePaths home-files/.config/sway/config) \
       ${./sway-default.conf}
+
+    assertFileExists home-files/.config/systemd/user/sway-session.target
+    assertFileContent home-files/.config/systemd/user/sway-session.target \
+      ${./sway-default.target}
   '';
 }

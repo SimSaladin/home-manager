@@ -59,7 +59,7 @@ let
         default = true;
         description = ''
           Whether to enable startup-notification support for the command.
-          See <option>--no-startup-id</option> option description in the i3 user guide.
+          See {option}`--no-startup-id` option description in the i3 user guide.
         '';
       };
 
@@ -68,8 +68,8 @@ let
         default = null;
         description = ''
           Launch application on a particular workspace. DEPRECATED:
-          Use <xref linkend="opt-xsession.windowManager.i3.config.assigns"/>
-          instead. See <link xlink:href="https://github.com/nix-community/home-manager/issues/265"/>.
+          Use [](#opt-xsession.windowManager.i3.config.assigns)
+          instead. See <https://github.com/nix-community/home-manager/issues/265>.
         '';
       };
     };
@@ -284,7 +284,7 @@ let
           See default values for the reference.
           Note that 'background', 'status', and 'separator' parameters take a single RGB value.
 
-          See <link xlink:href="https://i3wm.org/docs/userguide.html#_colors"/>.
+          See <https://i3wm.org/docs/userguide.html#_colors>.
         '';
       };
 
@@ -292,6 +292,15 @@ let
         type = types.str;
         default = "primary";
         description = "Where to output tray.";
+      };
+
+      trayPadding = mkNullableOption {
+        type = types.int;
+        default = null;
+        description = ''
+          Sets the pixel padding of the system tray.
+          This padding will surround the tray on all sides and between each item.
+        '';
       };
     };
   };
@@ -356,8 +365,8 @@ let
         type = criteriaModule;
         description = ''
           Criteria of the windows on which command should be executed.
-          </para><para>
-          A value of <literal>true</literal> is equivalent to using an empty
+
+          A value of `true` is equivalent to using an empty
           criteria (which is different from an empty string criteria).
         '';
         example = literalExpression ''
@@ -421,7 +430,7 @@ in {
           default = [ ];
           description = ''
             List of commands that should be executed on specific windows.
-            See <option>for_window</option> ${moduleName}wm option documentation.
+            See {option}`for_window` ${moduleName}wm option documentation.
           '';
           example = [{
             command = "border pixel 1";
@@ -460,12 +469,11 @@ in {
         };
 
         modifier = mkOption {
-          type =
-            types.enum [ "Shift" "Control" "Mod1" "Mod2" "Mod3" "Mod4" "Mod5" ];
+          type = types.str;
           default = cfg.config.modifier;
           defaultText = "${moduleName}.config.modifier";
           description =
-            "Modifier key that can be used to drag floating windows.";
+            "Modifier key or keys that can be used to drag floating windows.";
           example = "Mod4";
         };
 
@@ -494,7 +502,7 @@ in {
           description = ''
             This option modifies focus behavior on new window activation.
 
-            See <link xlink:href="https://i3wm.org/docs/userguide.html#focus_on_window_activation"/>
+            See <https://i3wm.org/docs/userguide.html#focus_on_window_activation>
           '';
           example = "none";
         };
@@ -521,7 +529,7 @@ in {
           description = ''
             Whether the window focus commands automatically wrap around the edge of containers.
 
-            See <link xlink:href="https://i3wm.org/docs/userguide.html#_focus_wrapping"/>
+            See <https://i3wm.org/docs/userguide.html#_focus_wrapping>
           '';
         };
 
@@ -531,7 +539,7 @@ in {
           description = ''
             Whether to force focus wrapping in tabbed or stacked containers.
 
-            This option is deprecated, use <option>focus.wrapping</option> instead.
+            This option is deprecated, use {option}`focus.wrapping` instead.
           '';
         };
 
@@ -601,7 +609,7 @@ in {
     default = { };
     description = ''
       An attribute set that assigns keypress to an action using key code.
-      See <link xlink:href="https://i3wm.org/docs/userguide.html#keybindings"/>.
+      See <https://i3wm.org/docs/userguide.html#keybindings>.
     '';
     example = { "214" = "exec /bin/script.sh"; };
   };
@@ -692,7 +700,7 @@ in {
       and RGB color hex-codes as values. See default values for the reference.
       Note that '${moduleName}.config.colors.background' parameter takes a single RGB value.
 
-      See <link xlink:href="https://i3wm.org/docs/userguide.html#_changing_colors"/>.
+      See <https://i3wm.org/docs/userguide.html#_changing_colors>.
     '';
   };
 
@@ -754,14 +762,14 @@ in {
     description = ''
       Commands that should be executed at startup.
 
-      See <link xlink:href="https://i3wm.org/docs/userguide.html#_automatically_starting_applications_on_i3_startup"/>.
+      See <https://i3wm.org/docs/userguide.html#_automatically_starting_applications_on_i3_startup>.
     '';
     example = if isI3 then
       literalExpression ''
         [
         { command = "systemctl --user restart polybar"; always = true; notification = false; }
         { command = "dropbox start"; notification = false; }
-        { command = "firefox"; workspace = "1: web"; }
+        { command = "firefox"; }
         ];
       ''
     else
@@ -903,13 +911,14 @@ in {
             };
 
             output = mkOption {
-              type = str;
+              type = with types; either str (listOf str);
               default = "";
+              apply = lists.toList;
               example = "eDP";
               description = ''
-                Name of the output from <command>
+                Name(s) of the output(s) from {command}`
                   ${if isSway then "swaymsg" else "i3-msg"} -t get_outputs
-                </command>.
+                `.
               '';
             };
           };

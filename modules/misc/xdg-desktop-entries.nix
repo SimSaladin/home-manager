@@ -34,6 +34,7 @@ let
       exec = mkOption {
         description = "Program to execute, possibly with arguments.";
         type = types.nullOr types.str;
+        default = null;
       };
 
       icon = mkOption {
@@ -81,7 +82,7 @@ let
       startupNotify = mkOption {
         description = ''
           If true, it is KNOWN that the application will send a "remove"
-          message when started with the <literal>DESKTOP_STARTUP_ID</literal>
+          message when started with the `DESKTOP_STARTUP_ID`
           environment variable set. If false, it is KNOWN that the application
           does not work with startup notification at all.'';
         type = types.nullOr types.bool;
@@ -106,9 +107,9 @@ let
       };
 
       settings = mkOption {
-        type = types.attrsOf types.string;
+        type = types.attrsOf types.str;
         description = ''
-          Extra key-value pairs to add to the <literal>[Desktop Entry]</literal> section.
+          Extra key-value pairs to add to the `[Desktop Entry]` section.
           This may override other values.
         '';
         default = { };
@@ -131,6 +132,7 @@ let
           options.exec = mkOption {
             type = types.nullOr types.str;
             description = "Program to execute, possibly with arguments.";
+            default = null;
           };
           options.icon = mkOption {
             type = with types; nullOr (either str path);
@@ -162,10 +164,6 @@ let
     };
   };
 
-  #formatting helpers
-  semicolonList = list:
-    (concatStringsSep ";" list) + ";"; # requires trailing semicolon
-
   #passes config options to makeDesktopItem in expected format
   makeFile = name: config:
     pkgs.makeDesktopItem {
@@ -183,9 +181,11 @@ in {
 
   options.xdg.desktopEntries = mkOption {
     description = ''
-      Desktop Entries allow applications to be shown in your desktop environment's app launcher. </para><para>
-      You can define entries for programs without entries or override existing entries. </para><para>
-      See <link xlink:href="https://specifications.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html#recognized-keys" /> for more information on options.
+      Desktop Entries allow applications to be shown in your desktop environment's app launcher.
+
+      You can define entries for programs without entries or override existing entries.
+
+      See <https://specifications.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html#recognized-keys> for more information on options.
     '';
     default = { };
     type = types.attrsOf (types.submodule desktopEntry);

@@ -6,8 +6,8 @@ let
 
   nmt = fetchTarball {
     url =
-      "https://gitlab.com/api/v4/projects/rycee%2Fnmt/repository/archive.tar.gz?sha=d83601002c99b78c89ea80e5e6ba21addcfe12ae";
-    sha256 = "1xzwwxygzs1cmysg97hzd285r7n1g1lwx5y1ar68gwq07a1rczmv";
+      "https://gitlab.com/api/v4/projects/rycee%2Fnmt/repository/archive.tar.gz?sha=4df00c569b1badfedffecd7ccd60f794550486db";
+    sha256 = "1cyly1zazgj8z6bazml4js7lqaqvpp8lw045aqchlpvp42bl1lp4";
   };
 
   modules = import ../modules/modules.nix {
@@ -30,7 +30,7 @@ let
 
       # Avoid including documentation since this will cause
       # unnecessary rebuilds of the tests.
-      manual.manpages.enable = false;
+      manual.manpages.enable = lib.mkDefault false;
 
       imports = [ ./asserts.nix ./big-test.nix ./stubs.nix ];
 
@@ -52,11 +52,13 @@ import nmt {
     ./modules/files
     ./modules/home-environment
     ./modules/misc/fontconfig
+    ./modules/misc/manual
     ./modules/misc/nix
-    ./modules/misc/specialization
+    ./modules/misc/specialisation
     ./modules/programs/aerc
     ./modules/programs/alacritty
     ./modules/programs/alot
+    ./modules/programs/antidote
     ./modules/programs/aria2
     ./modules/programs/atuin
     ./modules/programs/autojump
@@ -66,6 +68,8 @@ import nmt {
     ./modules/programs/broot
     ./modules/programs/browserpass
     ./modules/programs/btop
+    ./modules/programs/comodoro
+    ./modules/programs/darcs
     ./modules/programs/dircolors
     ./modules/programs/direnv
     ./modules/programs/emacs
@@ -73,6 +77,8 @@ import nmt {
     ./modules/programs/fish
     ./modules/programs/gallery-dl
     ./modules/programs/gh
+    ./modules/programs/gh-dash
+    ./modules/programs/git-cliff
     ./modules/programs/git
     ./modules/programs/gpg
     ./modules/programs/helix
@@ -81,9 +87,12 @@ import nmt {
     ./modules/programs/hyfetch
     ./modules/programs/i3status
     ./modules/programs/irssi
+    ./modules/programs/jujutsu
     ./modules/programs/k9s
     ./modules/programs/kakoune
     ./modules/programs/kitty
+    ./modules/programs/khal
+    ./modules/programs/ledger
     ./modules/programs/less
     ./modules/programs/lf
     ./modules/programs/lieer
@@ -96,6 +105,7 @@ import nmt {
     ./modules/programs/ncmpcpp
     ./modules/programs/ne
     ./modules/programs/neomutt
+    ./modules/programs/neovim
     ./modules/programs/newsboat
     ./modules/programs/nheko
     ./modules/programs/nix-index
@@ -109,8 +119,12 @@ import nmt {
     ./modules/programs/pls
     ./modules/programs/powerline-go
     ./modules/programs/pubs
+    ./modules/programs/pyenv
+    ./modules/programs/qcal
     ./modules/programs/qutebrowser
     ./modules/programs/readline
+    ./modules/programs/ripgrep
+    ./modules/programs/rtx
     ./modules/programs/sagemath
     ./modules/programs/sbt
     ./modules/programs/scmpuff
@@ -124,15 +138,19 @@ import nmt {
     ./modules/programs/tmate
     ./modules/programs/tmux
     ./modules/programs/topgrade
+    ./modules/programs/translate-shell
     ./modules/programs/vim-vint
     ./modules/programs/vscode
     ./modules/programs/watson
     ./modules/programs/wezterm
+    ./modules/programs/zellij
     ./modules/programs/zplug
     ./modules/programs/zsh
     ./modules/xresources
   ] ++ lib.optionals isDarwin [
     ./modules/launchd
+    ./modules/services/git-sync-darwin
+    ./modules/services/imapnotify-darwin
     ./modules/targets-darwin
   ] ++ lib.optionals isLinux [
     ./modules/config/i18n
@@ -147,18 +165,22 @@ import nmt {
     ./modules/misc/xsession
     ./modules/programs/abook
     ./modules/programs/autorandr
+    ./modules/programs/beets  # One test relies on services.mpd
     ./modules/programs/borgmatic
+    ./modules/programs/boxxy
     ./modules/programs/firefox
     ./modules/programs/foot
+    ./modules/programs/fuzzel
     ./modules/programs/getmail
     ./modules/programs/gnome-terminal
     ./modules/programs/hexchat
     ./modules/programs/i3status-rust
+    ./modules/programs/imv
     ./modules/programs/kodi
     ./modules/programs/looking-glass-client
     ./modules/programs/mangohud
     ./modules/programs/ncmpcpp-linux
-    ./modules/programs/neovim   # Broken package dependency on Darwin.
+    ./modules/programs/pqiv
     ./modules/programs/rbw
     ./modules/programs/rofi
     ./modules/programs/rofi-pass
@@ -167,12 +189,15 @@ import nmt {
     ./modules/programs/thunderbird
     ./modules/programs/waybar
     ./modules/programs/wlogout
+    ./modules/programs/wofi
     ./modules/programs/xmobar
     ./modules/programs/yt-dlp
+    ./modules/services/avizo
     ./modules/services/barrier
     ./modules/services/borgmatic
     ./modules/services/cachix-agent
     ./modules/services/clipman
+    ./modules/services/comodoro
     ./modules/services/devilspie2
     ./modules/services/dropbox
     ./modules/services/emacs
@@ -185,6 +210,7 @@ import nmt {
     ./modules/services/gpg-agent
     ./modules/services/gromit-mpx
     ./modules/services/home-manager-auto-upgrade
+    ./modules/services/imapnotify
     ./modules/services/kanshi
     ./modules/services/lieer
     ./modules/services/mopidy
@@ -202,6 +228,7 @@ import nmt {
     ./modules/services/redshift-gammastep
     ./modules/services/screen-locker
     ./modules/services/swayidle
+    ./modules/services/swayosd
     ./modules/services/sxhkd
     ./modules/services/syncthing/linux
     ./modules/services/trayer
@@ -209,6 +236,7 @@ import nmt {
     ./modules/services/udiskie
     ./modules/services/window-managers/bspwm
     ./modules/services/window-managers/herbstluftwm
+    ./modules/services/window-managers/hyprland
     ./modules/services/window-managers/i3
     ./modules/services/window-managers/spectrwm
     ./modules/services/window-managers/sway

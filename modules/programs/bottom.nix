@@ -8,11 +8,6 @@ let
 
   tomlFormat = pkgs.formats.toml { };
 
-  configDir = if pkgs.stdenv.isDarwin then
-    "Library/Application Support"
-  else
-    config.xdg.configHome;
-
 in {
   options = {
     programs.bottom = {
@@ -24,7 +19,7 @@ in {
         type = types.package;
         default = pkgs.bottom;
         defaultText = literalExpression "pkgs.bottom";
-        description = "Package providing <command>bottom</command>.";
+        description = "Package providing {command}`bottom`.";
       };
 
       settings = mkOption {
@@ -32,10 +27,9 @@ in {
         default = { };
         description = ''
           Configuration written to
-          <filename>$XDG_CONFIG_HOME/bottom/bottom.toml</filename> on Linux or
-          <filename>$HOME/Library/Application Support/bottom/bottom.toml</filename> on Darwin.
-          </para><para>
-          See <link xlink:href="https://github.com/ClementTsang/bottom/blob/master/sample_configs/default_config.toml"/>
+          {file}`$XDG_CONFIG_HOME/bottom/bottom.toml`.
+
+          See <https://github.com/ClementTsang/bottom/blob/master/sample_configs/default_config.toml>
           for the default configuration.
         '';
         example = literalExpression ''
@@ -57,7 +51,7 @@ in {
   config = mkIf cfg.enable {
     home.packages = [ cfg.package ];
 
-    home.file."${configDir}/bottom/bottom.toml" = mkIf (cfg.settings != { }) {
+    xdg.configFile."bottom/bottom.toml" = mkIf (cfg.settings != { }) {
       source = tomlFormat.generate "bottom.toml" cfg.settings;
     };
   };

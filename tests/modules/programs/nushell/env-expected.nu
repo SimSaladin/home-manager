@@ -1,2 +1,4 @@
-let-env FOO = 'BAR'
+$env.FOO = 'BAR'
 
+
+$env.BAR = $'(echo BAZ)'

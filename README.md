@@ -21,15 +21,24 @@ please see
 If you would like to contribute to Home Manager
 then please have a look at the [contributing][] chapter of the manual.
 
+Releases
+--------
+
+Home Manager is developed against `nixpkgs-unstable` branch, which
+often causes it to contain tweaks for changes/packages not yet
+released in stable NixOS. To avoid breaking users' configurations,
+Home Manager is released in branches corresponding to NixOS releases
+(e.g. `release-23.05`). These branches get fixes, but usually not new
+modules. If you need a module to be backported, then feel free to open
+an issue.
+
 Words of warning
 ----------------
 
 Unfortunately, it is quite possible to get difficult to understand
-errors when working with Home Manager, such as infinite loops with no
-clear source reference. You should therefore be comfortable using the
-Nix language and the various tools in the Nix ecosystem. Reading
-through the [Nix Pills][] document is a good way to familiarize
-yourself with them.
+errors when working with Home Manager. You should therefore be
+comfortable using the Nix language and the various tools in the Nix
+ecosystem.
 
 If you are not very familiar with Nix but still want to use Home
 Manager then you are strongly encouraged to start with a small and
@@ -42,7 +51,7 @@ will write to your dconf store and cannot tell whether a configuration
 that it is about to be overwritten was from a previous Home Manager
 generation or from manual configuration.
 
-Home Manager targets [NixOS][] unstable and NixOS version 22.11 (the
+Home Manager targets [NixOS][] unstable and NixOS version 23.05 (the
 current stable version), it may or may not work on other Linux
 distributions and NixOS versions.
 
@@ -100,17 +109,6 @@ contribute to the translation effort then start by going to the
 <img src="https://hosted.weblate.org/widgets/home-manager/-/multi-auto.svg" alt="Translation status" />
 </a>
 
-Releases
---------
-
-Home Manager is developed against `nixpkgs-unstable` branch, which
-often causes it to contain tweaks for changes/packages not yet
-released in stable NixOS. To avoid breaking users' configurations,
-Home Manager is released in branches corresponding to NixOS releases
-(e.g. `release-22.11`). These branches get fixes, but usually not new
-modules. If you need a module to be backported, then feel free to open
-an issue.
-
 License
 -------
 
@@ -125,7 +123,6 @@ This project is licensed under the terms of the [MIT license](LICENSE).
 [configuration options]: https://nix-community.github.io/home-manager/options.html
 [#home-manager]: https://webchat.oftc.net/?channels=home-manager
 [OFTC]: https://oftc.net/
-[Nix Pills]: https://nixos.org/guides/nix-pills/
 [Nix Flakes]: https://nixos.wiki/wiki/Flakes
 [nix-darwin]: https://github.com/LnL7/nix-darwin
 [manual standalone install]: https://nix-community.github.io/home-manager/index.html#sec-install-standalone

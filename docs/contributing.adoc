@@ -50,8 +50,8 @@ The first option is good if you only temporarily want to use your clone.
 [[sec-guidelines]]
 === Guidelines
 :irc-home-manager: https://webchat.oftc.net/?channels=home-manager
-:valuable-options: https://github.com/Infinisil/rfcs/blob/config-option/rfcs/0042-config-option.md#valuable-options
-:rfc-42: https://github.com/Infinisil/rfcs/blob/config-option/rfcs/0042-config-option.md
+:valuable-options: https://github.com/NixOS/rfcs/blob/master/rfcs/0042-config-option.md#valuable-options
+:rfc-42: https://github.com/NixOS/rfcs/blob/master/rfcs/0042-config-option.md
 :assertions: https://nixos.org/manual/nixos/stable/index.html#sec-assertions
 
 If your contribution satisfy the following rules then there is a good chance it will be merged without too much trouble. The rules are enforced by the Home Manager maintainers and to a lesser extent the Home Manager CI system.
@@ -94,11 +94,11 @@ All contributed code _must_ pass the test suite.
 [[sec-guidelines-module-maintainer]]
 
 ==== Add relevant documentation
+:nixpkgs-markdown: https://nixos.org/manual/nixpkgs/unstable/#sec-contributing-markup
 :docbook: https://tdg.docbook.org/
 :asciidoc: https://asciidoc.org/
-:docbook-rocks: https://berbiche.github.io/docbook.rocks/
 
-Many code changes require changing the documentation as well. Module options should be documented with DocBook. See {docbook-rocks}[DocBook rocks!] for a quick introduction and {docbook}[DocBook 5: The Definitive Guide] for in-depth information of DocBook. Home Manager is itself documented using a combination of DocBook and {asciidoc}[AsciiDoc]. All text is hosted in Home Manager's Git repository.
+Many code changes require changing the documentation as well. Module options should be documented with {nixpkgs-markdown}[Nixpkgs-flavoured Markdown]. Home Manager is itself documented using a combination of {docbook}[DocBook] and {asciidoc}[AsciiDoc]. All text is hosted in Home Manager's Git repository.
 
 The HTML version of the manual containing both the module option descriptions and the documentation of Home Manager can be generated and opened by typing the following in a shell within a clone of the Home Manager Git repository:
 
@@ -116,11 +116,9 @@ $ man ./result/share/man/man5/home-configuration.nix.5.gz
 
 Every new module _must_ include a named maintainer using the `meta.maintainers` attribute. If you are a user of a module that currently lacks a maintainer then please consider adopting it.
 
-If you are present in the NixOS maintainer list then you can use that entry. If you are not then you can add yourself to `modules/lib/maintainers.nix` in the Home Manager project.
+If you are present in the nixpkgs maintainer list then you can use that entry. If you are not then you can add yourself to `modules/lib/maintainers.nix` in the Home Manager project.
 
-Also add yourself to `.github/CODEOWNERS` as owner of the associated module files, including the test files. You will then be automatically added as a reviewer on any new pull request that touches your files.
-
-Maintainers are encouraged to join the IRC channel and participate when they have opportunity.
+Maintainers are encouraged to join the IRC or Matrix channel and participate when they have opportunity.
 
 [[sec-guidelines-code-style]]
 ==== Format your code
@@ -245,7 +243,7 @@ should be added. If you contribute a module then you don't need to add this entr
 
 Home Manager includes a basic test suite and it is highly recommended to include at least one test when adding a module. Tests are typically in the form of "golden tests" where, for example, a generated configuration file is compared to a known correct file.
 
-It is relatively easy to create tests by modeling the existing tests, found in the `tests` project directory.
+It is relatively easy to create tests by modeling the existing tests, found in the `tests` project directory. For a full reference to the functions available in test scripts, you can look at NMT's https://git.sr.ht/~rycee/nmt/tree/master/item/bash-lib[bash-lib].
 
 The full Home Manager test suite can be run by executing
 
@@ -265,4 +263,4 @@ $ nix-shell --pure tests -A run.alacritty-empty-settings
 However, those invocations will impurely source the system’s nixpkgs, and may cause failures. To run against the nixpkgs from the flake.lock, use instead e.g.
 
 [source,console]
-$ nix develop --ignore-environment .#tests.all
+$ nix develop --ignore-environment .#all

@@ -15,12 +15,13 @@ let
       outPath = mkOption {
         type = types.nullOr types.str;
         default = "@${name}@";
-        defaultText = "@\${name}@";
+        defaultText = literalExpression ''"@''${name}@"'';
       };
 
       version = mkOption {
         type = types.nullOr types.str;
         default = null;
+        defaultText = literalExpression "pkgs.\${name}.version or null";
       };
 
       buildScript = mkOption {
@@ -41,8 +42,18 @@ let
         dummyPackage
       else
         pkgs.runCommandLocal name { pname = name; } buildScript;
-    in pkg // optionalAttrs (outPath != null) { inherit outPath; }
-    // optionalAttrs (version != null) { inherit version; };
+    in pkg // optionalAttrs (outPath != null) {
+      inherit outPath;
+
+      # Prevent getOutput from descending into outputs
+      outputSpecified = true;
+
+      # Allow the original package to be used in derivation inputs
+      __spliced = {
+        buildHost = pkg;
+        hostTarget = pkg;
+      };
+    } // optionalAttrs (version != null) { inherit version; };
 
 in {
   options.test.stubs = mkOption {
@@ -55,7 +66,12 @@ in {
   config = {
     lib.test.mkStubPackage = mkStubPackage;
 
-    nixpkgs.overlays = mkIf (config.test.stubs != { })
-      [ (self: super: mapAttrs (n: mkStubPackage) config.test.stubs) ];
+    nixpkgs.overlays = mkIf (config.test.stubs != { }) [
+      (self: super:
+        mapAttrs (n: v:
+          mkStubPackage (v // optionalAttrs (v.version == null) {
+            version = super.${n}.version or null;
+          })) config.test.stubs)
+    ];
   };
 }

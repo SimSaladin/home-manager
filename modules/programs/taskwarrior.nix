@@ -51,7 +51,7 @@ in {
         '';
         description = ''
           Key-value configuration written to
-          <filename>$XDG_CONFIG_HOME/task/taskrc</filename>.
+          {file}`$XDG_CONFIG_HOME/task/taskrc`.
         '';
       };
 
@@ -61,7 +61,7 @@ in {
         defaultText = "$XDG_DATA_HOME/task";
         description = ''
           Location where Task Warrior will store its data.
-          </para><para>
+
           Home Manager will attempt to create this directory.
         '';
       };
@@ -81,14 +81,16 @@ in {
         default = "";
         description = ''
           Additional content written at the end of
-          <filename>$XDG_CONFIG_HOME/task/taskrc</filename>.
+          {file}`$XDG_CONFIG_HOME/task/taskrc`.
         '';
       };
+
+      package = mkPackageOption pkgs "taskwarrior" { };
     };
   };
 
   config = mkIf cfg.enable {
-    home.packages = [ pkgs.taskwarrior ];
+    home.packages = [ cfg.package ];
 
     home.file."${homeConf}".text = ''
       data.location=${cfg.dataLocation}

@@ -15,6 +15,12 @@ let
 
   unwords = builtins.concatStringsSep " ";
 
+  mkSetEnvStr = envStr: unwords
+    (mapAttrsToList
+      (name: value: ''${name}="${escape [ "\"" "\\" ] (toString value)}"'')
+      envStr
+    );
+
   bindOptions = {
     address = mkOption {
       type = types.str;
@@ -64,15 +70,12 @@ let
         default = null;
         example = "*.example.org";
         description = ''
-          <literal>Host</literal> pattern used by this conditional block.
+          `Host` pattern used by this conditional block.
           See
-          <citerefentry>
-          <refentrytitle>ssh_config</refentrytitle>
-          <manvolnum>5</manvolnum>
-          </citerefentry>
-          for <literal>Host</literal> block details.
+          {manpage}`ssh_config(5)`
+          for `Host` block details.
           This option is ignored if
-          <option>ssh.matchBlocks.*.matcht</option>
+          {option}`ssh.matchBlocks.*.match`
           if defined.
         '';
       };
@@ -82,14 +85,11 @@ let
         default = null;
         example = "host <hostname> canonical\nhost <hostname> exec \"ping -c1 -q 192.168.17.1\"";
         description = ''
-          <literal>Match</literal> block conditions used by this block. See
-          <citerefentry>
-          <refentrytitle>ssh_config</refentrytitle>
-          <manvolnum>5</manvolnum>
-          </citerefentry>
-          for <literal>Match</literal> block details.
+          `Match` block conditions used by this block. See
+          {manpage}`ssh_config(5)`
+          for `Match` block details.
           This option takes precedence over
-          <option>ssh.matchBlocks.*.host</option>
+          {option}`ssh.matchBlocks.*.host`
           if defined.
         '';
       };
@@ -114,7 +114,7 @@ let
         default = false;
         description = ''
           Specifies whether X11 connections will be automatically redirected
-          over the secure channel and <envar>DISPLAY</envar> set.
+          over the secure channel and {env}`DISPLAY` set.
         '';
       };
 
@@ -133,8 +133,8 @@ let
         description = ''
           Specifies that ssh should only use the authentication
           identity explicitly configured in the
-          <filename>~/.ssh/config</filename> files or passed on the
-          ssh command-line, even if <command>ssh-agent</command>
+          {file}`~/.ssh/config` files or passed on the
+          ssh command-line, even if {command}`ssh-agent`
           offers more identities.
         '';
       };
@@ -189,12 +189,20 @@ let
         '';
       };
 
+      setEnv = mkOption {
+        type = with types; attrsOf (oneOf [ str path int float ]);
+        default = {};
+        description = ''
+          Environment variables and their value to send to the server.
+        '';
+      };
+
       compression = mkOption {
         type = types.nullOr types.bool;
         default = null;
         description = ''
           Specifies whether to use compression. Omitted from the host
-          block when <literal>null</literal>.
+          block when `null`.
         '';
       };
 
@@ -203,7 +211,7 @@ let
         default = true;
         description = ''
           Check the host IP address in the
-          <filename>known_hosts</filename> file.
+          {file}`known_hosts` file.
         '';
       };
 
@@ -253,10 +261,7 @@ let
         '';
         description = ''
           Specify local port forwardings. See
-          <citerefentry>
-            <refentrytitle>ssh_config</refentrytitle>
-            <manvolnum>5</manvolnum>
-          </citerefentry> for <literal>LocalForward</literal>.
+          {manpage}`ssh_config(5)` for `LocalForward`.
         '';
       };
 
@@ -274,10 +279,7 @@ let
         '';
         description = ''
           Specify remote port forwardings. See
-          <citerefentry>
-            <refentrytitle>ssh_config</refentrytitle>
-            <manvolnum>5</manvolnum>
-          </citerefentry> for <literal>RemoteForward</literal>.
+          {manpage}`ssh_config(5)` for `RemoteForward`.
         '';
       };
 
@@ -289,10 +291,7 @@ let
         '';
         description = ''
           Specify dynamic port forwardings. See
-          <citerefentry>
-            <refentrytitle>ssh_config</refentrytitle>
-            <manvolnum>5</manvolnum>
-          </citerefentry> for <literal>DynamicForward</literal>.
+          {manpage}`ssh_config(5)` for `DynamicForward`.
         '';
       };
 
@@ -322,6 +321,7 @@ let
     ++ optional (cf.hostname != null)        "  HostName ${cf.hostname}"
     ++ optional (cf.addressFamily != null)   "  AddressFamily ${cf.addressFamily}"
     ++ optional (cf.sendEnv != [])           "  SendEnv ${unwords cf.sendEnv}"
+    ++ optional (cf.setEnv != {})            "  SetEnv ${mkSetEnvStr cf.setEnv}"
     ++ optional (cf.serverAliveInterval != 0)
       "  ServerAliveInterval ${toString cf.serverAliveInterval}"
     ++ optional (cf.serverAliveCountMax != 3)
@@ -345,6 +345,12 @@ in
 
   options.programs.ssh = {
     enable = mkEnableOption "SSH client configuration";
+
+    package = mkPackageOption pkgs "openssh" {
+      nullable = true;
+      default = null;
+      extraDescription = "By default, the client provided by your system is used.";
+    };
 
     forwardAgent = mkOption {
       default = false;
@@ -383,10 +389,7 @@ in
       type = types.bool;
       description = ''
         Indicates that
-        <citerefentry>
-          <refentrytitle>ssh</refentrytitle>
-          <manvolnum>1</manvolnum>
-        </citerefentry>
+        {manpage}`ssh(1)`
         should hash host names and addresses when they are added to
         the known hosts file.
       '';
@@ -398,7 +401,7 @@ in
       description = ''
         Specifies one or more files to use for the user host key
         database, separated by whitespace. The default is
-        <filename>~/.ssh/known_hosts</filename>.
+        {file}`~/.ssh/known_hosts`.
       '';
     };
 
@@ -449,19 +452,16 @@ in
       default = [];
       description = ''
         File globs of ssh config files that should be included via the
-        <literal>Include</literal> directive.
-        </para><para>
+        `Include` directive.
+
         See
-        <citerefentry>
-          <refentrytitle>ssh_config</refentrytitle>
-          <manvolnum>5</manvolnum>
-        </citerefentry>
+        {manpage}`ssh_config(5)`
         for more information.
       '';
     };
 
     matchBlocks = mkOption {
-      type = hm.types.listOrDagOf matchBlockModule;
+      type = hm.types.dagOf matchBlockModule;
       default = {};
       example = literalExpression ''
         {
@@ -479,12 +479,9 @@ in
         Specify per-host settings. Note, if the order of rules matter
         then use the DAG functions to express the dependencies as
         shown in the example.
-        </para><para>
+
         See
-        <citerefentry>
-          <refentrytitle>ssh_config</refentrytitle>
-          <manvolnum>5</manvolnum>
-        </citerefentry>
+        {manpage}`ssh_config(5)`
         for more information.
       '';
     };
@@ -509,6 +506,8 @@ in
         message = "Forwarded paths cannot have ports.";
       }
     ];
+
+    home.packages = optional (cfg.package != null) cfg.package;
 
     home.file.".ssh/config".text =
       let

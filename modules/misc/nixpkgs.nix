@@ -53,24 +53,20 @@ in {
         details, see the Nixpkgs documentation.) It allows you to set
         package configuration options.
 
-        </para><para>
-
-        If <literal>null</literal>, then configuration is taken from
+        If `null`, then configuration is taken from
         the fallback location, for example,
-        <filename>~/.config/nixpkgs/config.nix</filename>.
-
-        </para><para>
+        {file}`~/.config/nixpkgs/config.nix`.
 
         Note, this option will not apply outside your Home Manager
         configuration like when installing manually through
-        <command>nix-env</command>. If you want to apply it both
+        {command}`nix-env`. If you want to apply it both
         inside and outside Home Manager you can put it in a separate
         file and include something like
 
-        <programlisting language="nix">
+        ```nix
           nixpkgs.config = import ./nixpkgs-config.nix;
           xdg.configFile."nixpkgs/config.nix".source = ./nixpkgs-config.nix;
-        </programlisting>
+        ```
 
         in your Home Manager configuration.
       '';
@@ -79,35 +75,32 @@ in {
     overlays = mkOption {
       default = null;
       example = literalExpression ''
-        [ (self: super: {
-            openssh = super.openssh.override {
+        [
+          (final: prev: {
+            openssh = prev.openssh.override {
               hpnSupport = true;
               withKerberos = true;
-              kerberos = self.libkrb5;
+              kerberos = final.libkrb5;
             };
-          };
-        ) ]
+          })
+        ]
       '';
       type = types.nullOr (types.listOf overlayType);
       description = ''
         List of overlays to use with the Nix Packages collection. (For
         details, see the Nixpkgs documentation.) It allows you to
         override packages globally. This is a function that takes as
-        an argument the <emphasis>original</emphasis> Nixpkgs. The
+        an argument the *original* Nixpkgs. The
         first argument should be used for finding dependencies, and
         the second should be used for overriding recipes.
 
-        </para><para>
-
-        If <literal>null</literal>, then the overlays are taken from
+        If `null`, then the overlays are taken from
         the fallback location, for example,
-        <filename>~/.config/nixpkgs/overlays</filename>.
+        {file}`~/.config/nixpkgs/overlays`.
 
-        </para><para>
-
-        Like <varname>nixpkgs.config</varname> this option only
+        Like {var}`nixpkgs.config` this option only
         applies within the Home Manager configuration. See
-        <varname>nixpkgs.config</varname> for a suggested setup that
+        {var}`nixpkgs.config` for a suggested setup that
         works both internally and externally.
       '';
     };
@@ -128,7 +121,9 @@ in {
 
   config = {
     _module.args = {
-      pkgs = mkOverride modules.defaultPriority _pkgs;
+      # We use a no-op override to make sure that the option can be merged without evaluating
+      # `_pkgs`, see https://github.com/nix-community/home-manager/pull/993
+      pkgs = mkOverride modules.defaultOverridePriority _pkgs;
       pkgs_i686 =
         if _pkgs.stdenv.isLinux && _pkgs.stdenv.hostPlatform.isx86 then
           _pkgs.pkgsi686Linux

@@ -37,6 +37,12 @@
     github = "CarlosLoboxyz";
     githubId = 86011416;
   };
+  cvoges12 = {
+    name = "Clayton Voges";
+    email = "38054771+cvoges12@users.noreply.github.com";
+    github = "cvoges12";
+    githubId = 38054771;
+  };
   d-dervishi = {
     email = "david.dervishi@epfl.ch";
     github = "d-dervishi";
@@ -158,6 +164,18 @@
     email = "mifom@users.noreply.github.com";
     github = "mifom";
     githubId = 23462908;
+  };
+  nikp123 = {
+    name = "nikp123";
+    email = "nikp123@users.noreply.github.com";
+    github = "nikp123";
+    githubId = 4696350;
+  };
+  nilp0inter = {
+    name = "Roberto Abdelkader Martínez Pérez";
+    email = "robertomartinezp@gmail.com";
+    github = "nilp0inter";
+    githubId = 1224006;
   };
   seylerius = {
     email = "sable@seyleri.us";
@@ -323,6 +341,12 @@
     github = "sebtm";
     githubId = 17243347;
   };
+  rasmus-kirk = {
+    name = "Rasmus Kirk";
+    email = "mail@rasmuskirk.com";
+    github = "rasmus-kirk";
+    githubId = 57323869;
+  };
   rosuavio = {
     name = "Rosario Pulella";
     email = "RosarioPulella@gmail.com";
@@ -357,6 +381,15 @@
     github = "lukasngl";
     githubId = 69244516;
   };
+  soywod = {
+    name = "Clément DOUIN";
+    email = "clement.douin@posteo.net";
+    matrix = "@soywod:matrix.org";
+    github = "soywod";
+    githubId = 10437171;
+    keys =
+      [{ fingerprint = "75F0 AB7C FE01 D077 AEE6  CAFD 353E 4A18 EE0F AB72"; }];
+  };
   toastal = {
     email = "toastal+nix@posteo.net";
     matrix = "@toastal:matrix.org";
@@ -372,5 +405,23 @@
     github = "tomodachi94";
     githubId = 68489118;
     name = "tomodachi94";
+  };
+  NateCox = {
+    name = "Nate Cox";
+    email = "nate@natecox.dev";
+    github = "natecox";
+    githubId = 2782695;
+  };
+  pedorich-n = {
+    name = "Mykyta Pedorich";
+    email = "pedorich.n@gmail.com";
+    github = "pedorich-n";
+    githubId = 15573098;
+  };
+  liyangau = {
+    name = "Li Yang";
+    email = "d@aufomm.com";
+    github = "liyangau";
+    githubId = 71299093;
   };
 }

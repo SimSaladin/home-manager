@@ -59,7 +59,7 @@ in {
       default = [ ];
       example = [ "-f" "exwm-enable" ];
       description = ''
-        Extra command-line arguments to pass to <command>emacs</command>.
+        Extra command-line arguments to pass to {command}`emacs`.
       '';
     };
 
@@ -69,7 +69,7 @@ in {
         type = with types; listOf str;
         default = [ "-c" ];
         description = ''
-          Command-line arguments to pass to <command>emacsclient</command>.
+          Command-line arguments to pass to {command}`emacsclient`.
         '';
       };
     };
@@ -81,14 +81,18 @@ in {
       enable = mkEnableOption "systemd socket activation for the Emacs service";
     };
 
-    startWithUserSession = lib.mkOption {
-      type = lib.types.bool;
+    startWithUserSession = mkOption {
+      type = with types; either bool (enum [ "graphical" ]);
       default = !cfg.socketActivation.enable;
       defaultText =
         literalExpression "!config.services.emacs.socketActivation.enable";
-      example = true;
+      example = "graphical";
       description = ''
-        Whether to launch Emacs service with the systemd user session.
+        Whether to launch Emacs service with the systemd user session. If it is
+        `true`, Emacs service is started by
+        `default.target`. If it is
+        `"graphical"`, Emacs service is started by
+        `graphical-session.target`.
       '';
     };
 
@@ -97,8 +101,8 @@ in {
       default = false;
       example = !default;
       description = ''
-        Whether to configure <command>emacsclient</command> as the default
-        editor using the <envar>EDITOR</envar> environment variable.
+        Whether to configure {command}`emacsclient` as the default
+        editor using the {env}`EDITOR` environment variable.
       '';
     };
   };
@@ -115,6 +119,11 @@ in {
           Description = "Emacs text editor";
           Documentation =
             "info:emacs man:emacs(1) https://gnu.org/software/emacs/";
+
+          After = optional (cfg.startWithUserSession == "graphical")
+            "graphical-session.target";
+          PartOf = optional (cfg.startWithUserSession == "graphical")
+            "graphical-session.target";
 
           # Avoid killing the Emacs session, which may be full of
           # unsaved buffers.
@@ -156,8 +165,15 @@ in {
           ExecStopPost =
             "${pkgs.coreutils}/bin/chmod --changes +w ${socketDir}";
         };
-      } // optionalAttrs (cfg.startWithUserSession) {
-        Install = { WantedBy = [ "default.target" ]; };
+      } // optionalAttrs (cfg.startWithUserSession != false) {
+        Install = {
+          WantedBy = [
+            (if cfg.startWithUserSession == true then
+              "default.target"
+            else
+              "graphical-session.target")
+          ];
+        };
       };
 
       home = {

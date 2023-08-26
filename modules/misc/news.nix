@@ -59,57 +59,48 @@ in
         default = "notify";
         description = ''
           How unread and relevant news should be presented when
-          running <command>home-manager build</command> and
-          <command>home-manager switch</command>.
-
-          </para><para>
+          running {command}`home-manager build` and
+          {command}`home-manager switch`.
 
           The options are
 
-          <variablelist>
-          <varlistentry>
-            <term><literal>silent</literal></term>
-            <listitem>
-              <para>
-                Do not print anything during build or switch. The
-                <command>home-manager news</command> command still
-                works for viewing the entries.
-              </para>
-            </listitem>
-          </varlistentry>
-          <varlistentry>
-            <term><literal>notify</literal></term>
-            <listitem>
-              <para>
-                The number of unread and relevant news entries will be
-                printed to standard output. The <command>home-manager
-                news</command> command can later be used to view the
-                entries.
-              </para>
-            </listitem>
-          </varlistentry>
-          <varlistentry>
-            <term><literal>show</literal></term>
-            <listitem>
-              <para>
-                A pager showing unread news entries is opened.
-              </para>
-            </listitem>
-          </varlistentry>
-          </variablelist>
+          `silent`
+          : Do not print anything during build or switch. The
+            {command}`home-manager news` command still
+            works for viewing the entries.
+
+          `notify`
+          : The number of unread and relevant news entries will be
+            printed to standard output. The {command}`home-manager
+            news` command can later be used to view the entries.
+
+          `show`
+          : A pager showing unread news entries is opened.
         '';
       };
 
       entries = mkOption {
         internal = true;
         type = types.listOf entryModule;
-        default = [];
+        default = [ ];
         description = "News entries.";
+      };
+
+      json = {
+        output = mkOption {
+          internal = true;
+          type = types.package;
+          description = "The generated JSON file package.";
+        };
       };
     };
   };
 
   config = {
+    news.json.output = pkgs.writeText "hm-news.json" (builtins.toJSON {
+      inherit (cfg) display entries;
+    });
+
     # Add news entries in chronological order (i.e., latest time
     # should be at the bottom of the list). The time should be
     # formatted as given in the output of
@@ -977,6 +968,236 @@ in
         time = "2023-03-25T14:53:57+00:00";
         message = ''
           A new module is available: 'programs.hstr'.
+        '';
+      }
+
+      {
+        time = "2023-04-18T06:28:31+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          A new module is available: 'services.batsignal'.
+        '';
+      }
+
+      {
+        time = "2023-04-19T15:33:07+00:00";
+        message = ''
+          A new module is available: 'programs.mr'.
+        '';
+      }
+
+      {
+        time = "2023-04-28T19:59:23+00:00";
+        message = ''
+          A new module is available: 'programs.jujutsu'.
+        '';
+      }
+
+      {
+        time = "2023-05-09T16:06:56+00:00";
+        message = ''
+          A new module is available: 'programs.git-cliff'.
+        '';
+      }
+
+      {
+        time = "2023-05-12T21:31:05+00:00";
+        message = ''
+          A new module is available: 'programs.translate-shell'.
+        '';
+      }
+
+      {
+        time = "2023-05-13T13:51:18+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          A new module is available: 'programs.fuzzel'.
+        '';
+      }
+
+      {
+        time = "2023-05-13T14:34:21+00:00";
+        condition = config.programs.ssh.enable;
+        message = ''
+          The module 'programs.ssh' can now install an SSH client. The installed
+          client is controlled by the 'programs.ssh.package` option, which
+          defaults to 'null'.
+        '';
+      }
+
+      {
+        time = "2023-05-18T21:03:30+00:00";
+        message = ''
+          A new module is available: 'programs.script-directory'.
+        '';
+      }
+
+      {
+        time = "2023-06-03T22:19:32+00:00";
+        message = ''
+          A new module is available: 'programs.ripgrep'.
+        '';
+      }
+
+      {
+        time = "2023-06-07T06:01:16+00:00";
+        message = ''
+          A new module is available: 'programs.rtx'.
+        '';
+      }
+
+      {
+        time = "2023-06-07T12:16:55+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          A new module is available: 'programs.imv'.
+        '';
+      }
+
+      {
+        time = "2023-06-09T19:13:39+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          A new module is available: 'programs.boxxy'.
+        '';
+      }
+
+      {
+        time = "2020-04-26T13:32:17+00:00";
+        message = ''
+          A number of new modules are available:
+
+            - 'accounts.calendar',
+            - 'accounts.contact',
+            - 'programs.khal',
+            - 'programs.vdirsyncer', and
+            - 'services.vdirsyncer' (Linux only).
+
+          The two first modules offer a number of options for
+          configuring calendar and contact accounts. This includes,
+          for example, information about carddav and caldav servers.
+
+          The khal and vdirsyncer modules make use of this new account
+          infrastructure.
+
+          Note, these module are still somewhat experimental and their
+          structure should not be seen as final, some modifications
+          may be necessary as new modules are added.
+        '';
+      }
+
+      {
+        time = "2023-06-14T21:25:34+00:00";
+        message = ''
+          A new module is available: 'programs.git-credential-oauth'.
+        '';
+      }
+
+      {
+        time = "2023-06-14T21:41:22+00:00";
+        message = ''
+          Two new modules are available:
+
+            - 'programs.comodoro' and
+            - 'services.comodoro'
+        '';
+      }
+
+      {
+        time = "2023-06-15T16:30:00+00:00";
+        condition = config.qt.enable;
+        message = ''
+          Qt module now supports new platform themes and styles, and has partial
+          support for Qt6. For example, you can now use:
+
+          - `qt.platformTheme = "kde"`: set a theme using Plasma. You can
+          configure it by setting `~/.config/kdeglobals` file;
+          - `qt.platformTheme = "qtct"`: set a theme using qt5ct/qt6ct. You
+          can control it by using the `qt5ct` and `qt6ct` applications;
+          - `qt.style.name = "kvantum"`: override the style by using themes
+          written in SVG. Supports many popular themes.
+          '';
+      }
+
+      {
+        time = "2023-06-17T22:18:22+00:00";
+        condition = config.programs.zsh.enable;
+        message = ''
+          A new module is available: 'programs.zsh.antidote'
+        '';
+      }
+
+      {
+        time = "2023-06-30T14:46:22+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          A new module is available: 'services.ssh-agent'
+        '';
+      }
+
+      {
+        time = "2023-07-08T08:27:41+00:00";
+        message = ''
+          A new modules is available: 'programs.darcs'
+        '';
+      }
+
+      {
+        time = "2023-07-08T09:21:06+00:00";
+        message = ''
+          A new module is available: 'programs.pyenv'.
+        '';
+      }
+
+      {
+        time = "2023-07-08T09:44:56+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          A new module is available: 'services.swayosd'
+        '';
+      }
+
+      {
+        time = "2023-07-20T21:56:49+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          A new module is available: 'wayland.windowManager.hyprland'
+        '';
+      }
+
+      {
+        time = "2023-07-24T10:38:23+00:00";
+        message = ''
+          A new module is available: 'programs.gh-dash'
+        '';
+      }
+
+      {
+        time = "2023-07-25T07:16:09+00:00";
+        condition = hostPlatform.isDarwin;
+        message = ''
+          A new module is available: 'services.git-sync'.
+        '';
+      }
+
+      {
+        time = "2023-08-15T15:45:45+00:00";
+        message = ''
+          A new module is available: 'programs.xplr'.
+        '';
+      }
+
+      {
+        time = "2023-08-16T15:43:30+00:00";
+        message = ''
+          A new module is available: 'programs.pqiv'.
+        '';
+      }
+
+      {
+        time = "2023-08-22T16:06:52+00:00";
+        message = ''
+          A new module is available: 'programs.qcal'.
         '';
       }
     ];

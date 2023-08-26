@@ -25,13 +25,19 @@ in {
     dconf = {
       enable = mkOption {
         type = types.bool;
-        default = true;
+        # While technically dconf on darwin could work, our activation step
+        # requires dbus, which only *lightly* supports Darwin in general, and
+        # not at all in the way it's packaged in nixpkgs. Because of this, we
+        # just disable dconf for darwin hosts by default.
+        # In the future, if someone gets dbus working, this _could_ be
+        # re-enabled, unclear whether there's actual value in it though.
+        default = !pkgs.stdenv.hostPlatform.isDarwin;
         visible = false;
         description = ''
           Whether to enable dconf settings.
-          </para><para>
+
           Note, if you use NixOS then you must add
-          <code>programs.dconf.enable = true</code>
+          `programs.dconf.enable = true`
           to your system configuration. Otherwise you will see a systemd error
           message when your configuration is activated.
         '';
@@ -53,6 +59,17 @@ in {
         '';
         description = ''
           Settings to write to the dconf configuration system.
+
+          Note that the database is strongly-typed so you need to use the same types
+          as described in the GSettings schema. For example, if an option is of type
+          `uint32` (`u`), you need to wrap the number
+          using the `lib.hm.gvariant.mkUint32` constructor.
+          Otherwise, since Nix integers are implicitly coerced to `int32`
+          (`i`), it would get stored in the database as such, and GSettings
+          might be confused when loading the setting.
+
+          You might want to use [dconf2nix](https://github.com/gvolpe/dconf2nix)
+          to convert dconf database dumps into compatible Nix expression.
         '';
       };
     };

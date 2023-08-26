@@ -23,7 +23,7 @@ let
           defaultText = literalExpression
             "if source is defined, the content of source, otherwise empty";
           description = ''
-            Text of the nushell <filename>${name}</filename> file.
+            Text of the nushell {file}`${name}` file.
             If unset then the source option will be preferred.
           '';
         };
@@ -32,7 +32,7 @@ let
           type = types.nullOr types.path;
           default = null;
           description = ''
-            Path of the nushell <filename>${name}</filename> file to use.
+            Path of the nushell {file}`${name}` file to use.
             If the text option is set, it will be preferred.
           '';
         };
@@ -76,9 +76,8 @@ in {
       '';
       description = ''
         The configuration file to be used for nushell.
-        </para>
-        <para>
-        See <link xlink:href="https://www.nushell.sh/book/configuration.html#configuration" /> for more information.
+
+        See <https://www.nushell.sh/book/configuration.html#configuration> for more information.
       '';
     };
 
@@ -86,13 +85,28 @@ in {
       type = types.nullOr (linesOrSource "env.nu");
       default = null;
       example = ''
-        let-env FOO = 'BAR'
+        $env.FOO = 'BAR'
       '';
       description = ''
         The environment variables file to be used for nushell.
-        </para>
-        <para>
-        See <link xlink:href="https://www.nushell.sh/book/configuration.html#configuration" /> for more information.
+
+        See <https://www.nushell.sh/book/configuration.html#configuration> for more information.
+      '';
+    };
+
+    loginFile = mkOption {
+      type = types.nullOr (linesOrSource "login.nu");
+      default = null;
+      example = ''
+        # Prints "Hello, World" upon logging into tty1
+        if (tty) == "/dev/tty1" {
+          echo "Hello, World"
+        }
+      '';
+      description = ''
+        The login file to be used for nushell upon logging in.
+
+        See <https://www.nushell.sh/book/configuration.html#configuring-nu-as-a-login-shell> for more information.
       '';
     };
 
@@ -111,21 +125,67 @@ in {
         Additional configuration to add to the nushell environment variables file.
       '';
     };
+
+    extraLogin = mkOption {
+      type = types.lines;
+      default = "";
+      description = ''
+        Additional configuration to add to the nushell login file.
+      '';
+    };
+
+    shellAliases = mkOption {
+      type = types.attrsOf types.str;
+      default = { };
+      example = { ll = "ls -l"; };
+      description = ''
+        An attribute set that maps aliases (the top level attribute names in
+        this option) to command strings or directly to build outputs.
+      '';
+    };
+
+    environmentVariables = mkOption {
+      type = types.attrsOf types.str;
+      default = { };
+      example = { FOO = "BAR"; };
+      description = ''
+        An attribute set that maps an environment variable to a shell interpreted string.
+      '';
+    };
   };
 
   config = mkIf cfg.enable {
     home.packages = [ cfg.package ];
+
     home.file = mkMerge [
-      (mkIf (cfg.configFile != null || cfg.extraConfig != "") {
+      (let
+        writeConfig = cfg.configFile != null || cfg.extraConfig != ""
+          || aliasesStr != "";
+
+        aliasesStr = concatStringsSep "\n"
+          (mapAttrsToList (k: v: "alias ${k} = ${v}") cfg.shellAliases);
+      in mkIf writeConfig {
         "${configDir}/config.nu".text = mkMerge [
           (mkIf (cfg.configFile != null) cfg.configFile.text)
           cfg.extraConfig
+          aliasesStr
         ];
       })
-      (mkIf (cfg.envFile != null || cfg.extraEnv != "") {
+
+      (let
+        envVarsStr = concatStringsSep "\n"
+          (mapAttrsToList (k: v: "$env.${k} = ${v}") cfg.environmentVariables);
+      in mkIf (cfg.envFile != null || cfg.extraEnv != "" || envVarsStr != "") {
         "${configDir}/env.nu".text = mkMerge [
           (mkIf (cfg.envFile != null) cfg.envFile.text)
           cfg.extraEnv
+          envVarsStr
+        ];
+      })
+      (mkIf (cfg.loginFile != null || cfg.extraLogin != "") {
+        "${configDir}/login.nu".text = mkMerge [
+          (mkIf (cfg.loginFile != null) cfg.loginFile.text)
+          cfg.extraLogin
         ];
       })
     ];

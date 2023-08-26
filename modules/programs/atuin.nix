@@ -26,16 +26,17 @@ in {
       default = true;
       description = ''
         Whether to enable Atuin's Bash integration. This will bind
-        <literal>ctrl-r</literal> to open the Atuin history.
+        `ctrl-r` to open the Atuin history.
       '';
     };
 
-    enableZshIntegration = mkEnableOption "Zsh integration" // {
+    enableZshIntegration = mkOption {
+      type = types.bool;
       default = true;
       description = ''
         Whether to enable Atuin's Zsh integration.
-        </para><para>
-        If enabled, this will bind <literal>ctrl-r</literal> and the up-arrow
+
+        If enabled, this will bind `ctrl-r` and the up-arrow
         key to open the Atuin history.
       '';
     };
@@ -45,7 +46,7 @@ in {
       type = types.bool;
       description = ''
         Whether to enable Atuin's Fish integration.
-        </para><para>
+
         If enabled, this will bind the up-arrow key to open the Atuin history.
       '';
     };
@@ -79,10 +80,18 @@ in {
       '';
       description = ''
         Configuration written to
-        <filename>$XDG_CONFIG_HOME/atuin/config.toml</filename>.
-        </para><para>
-        See <link xlink:href="https://github.com/ellie/atuin/blob/main/docs/config.md" /> for the full list
+        {file}`$XDG_CONFIG_HOME/atuin/config.toml`.
+
+        See <https://atuin.sh/docs/config/> for the full list
         of options.
+      '';
+    };
+
+    enableNushellIntegration = mkOption {
+      default = true;
+      type = types.bool;
+      description = ''
+        Whether to enable Nushell integration.
       '';
     };
   };
@@ -114,5 +123,18 @@ in {
     programs.fish.interactiveShellInit = mkIf cfg.enableFishIntegration ''
       ${cfg.package}/bin/atuin init fish ${flagsStr} | source
     '';
+
+    programs.nushell = mkIf cfg.enableNushellIntegration {
+      extraEnv = ''
+        let atuin_cache = "${config.xdg.cacheHome}/atuin"
+        if not ($atuin_cache | path exists) {
+          mkdir $atuin_cache
+        }
+        ${cfg.package}/bin/atuin init nu ${flagsStr} | save --force ${config.xdg.cacheHome}/atuin/init.nu
+      '';
+      extraConfig = ''
+        source ${config.xdg.cacheHome}/atuin/init.nu
+      '';
+    };
   };
 }

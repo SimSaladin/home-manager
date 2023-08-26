@@ -7,9 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Home Manager Modules\n"
 "Report-Msgid-Bugs-To: https://github.com/nix-community/home-manager/issues\n"
-"POT-Creation-Date: 2023-03-15 20:11+0100\n"
-"PO-Revision-Date: 2022-05-16 13:18+0000\n"
-"Last-Translator: Yubo-Cao <Cao2006721@gmail.com>\n"
+"POT-Creation-Date: 2023-07-30 09:08+0200\n"
+"PO-Revision-Date: 2023-06-12 10:49+0000\n"
+"Last-Translator: Hongtyu Bhe <mfthits@gmail.com>\n"
 "Language-Team: Chinese (Simplified) <https://hosted.weblate.org/projects/"
 "home-manager/modules/zh_Hans/>\n"
 "Language: zh_Hans\n"
@@ -17,11 +17,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.13-dev\n"
+"X-Generator: Weblate 4.18-dev\n"
 
 #: modules/files.nix:234
 msgid "Creating home file links in %s"
-msgstr "正在 %s 中创建家目录文件链接"
+msgstr "正在 %s 中创建 Home 目录文件链接"
 
 #: modules/files.nix:247
 msgid "Cleaning up orphan links from %s"
@@ -35,7 +35,7 @@ msgstr "正在创建配置文件世代 %s"
 msgid "No change so reusing latest profile generation %s"
 msgstr "未发生变化，正在重新使用最近一次的配置文件世代 %s"
 
-#: modules/home-environment.nix:625
+#: modules/home-environment.nix:626
 msgid ""
 "Oops, Nix failed to install your new Home Manager profile!\n"
 "\n"
@@ -63,19 +63,23 @@ msgstr ""
 "\n"
 "来移除。然后尝试再次激活您的 Home Manager 配置。"
 
-#: modules/home-environment.nix:658
+#: modules/home-environment.nix:659
 msgid "Activating %s"
 msgstr "正在激活 %s"
 
-#: modules/lib-bash/activation-init.sh:16
-msgid "Migrating profiles from %s to %s"
-msgstr ""
+#: modules/lib-bash/activation-init.sh:22
+msgid "Migrating profile from %s to %s"
+msgstr "将从%s向%s迁移配置档案"
 
-#: modules/lib-bash/activation-init.sh:75
+#: modules/lib-bash/activation-init.sh:53
+msgid "Could not find suitable profile directory, tried %s and %s"
+msgstr "在 %s 以及 %s 中未能找到合适的档案目录"
+
+#: modules/lib-bash/activation-init.sh:81
 msgid "Sanity checking oldGenNum and oldGenPath"
 msgstr "正在进行 oldGenNum 和 oldGenPath 的完整性检查"
 
-#: modules/lib-bash/activation-init.sh:78
+#: modules/lib-bash/activation-init.sh:84
 msgid ""
 "The previous generation number and path are in conflict! These\n"
 "must be either both empty or both set but are now set to\n"
@@ -90,27 +94,47 @@ msgid ""
 "\n"
 "and trying home-manager switch again. Good luck!"
 msgstr ""
+"上一次生成序号和路径存在冲突！\n"
+"两者需要同时为空或者设置，但目前状态是\n"
+"\n"
+"    '%s' 和 '%s'\n"
+"\n"
+"但如果你不介意丢失上次生成结果，\n"
+"最简单的解决方案是运行\n"
+"\n"
+"    rm %s/home-manager*\n"
+"    rm %s/current-home\n"
+"\n"
+"然后再次尝试执行 home-manager switch。祝你一把过！"
 
 #: modules/lib-bash/activation-init.sh:95
+msgid "Error: USER is set to \"%s\" but we expect \"%s\""
+msgstr "错误: USER 被配置为 \"%s\" 但我们预期它是 \"%s\""
+
+#: modules/lib-bash/activation-init.sh:104
+msgid "Error: HOME is set to \"%s\" but we expect \"%s\""
+msgstr "错误: HOME 目前设置了 \"%s\" 但我们需要它是 \"%s\""
+
+#: modules/lib-bash/activation-init.sh:119
 msgid "Starting Home Manager activation"
 msgstr "正在启动 Home Manager 初始化程序"
 
-#: modules/lib-bash/activation-init.sh:99
+#: modules/lib-bash/activation-init.sh:123
 msgid "Sanity checking Nix"
 msgstr "正在进行 Nix 完整性检查"
 
-#: modules/lib-bash/activation-init.sh:105
+#: modules/lib-bash/activation-init.sh:133
 msgid "This is a dry run"
 msgstr "这是试运行"
 
-#: modules/lib-bash/activation-init.sh:109
+#: modules/lib-bash/activation-init.sh:137
 msgid "This is a live run"
 msgstr "这是在实际运行"
 
-#: modules/lib-bash/activation-init.sh:116
+#: modules/lib-bash/activation-init.sh:143
 msgid "Using Nix version: %s"
 msgstr "正在使用的 Nix 版本: %s"
 
-#: modules/lib-bash/activation-init.sh:119
+#: modules/lib-bash/activation-init.sh:146
 msgid "Activation variables:"
 msgstr "激活的变量："
