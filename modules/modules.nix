@@ -57,9 +57,11 @@ let
     ./programs/atuin.nix
     ./programs/autojump.nix
     ./programs/autorandr.nix
+    ./programs/awscli.nix
     ./programs/bash.nix
     ./programs/bashmount.nix
     ./programs/bat.nix
+    ./programs/bacon.nix
     ./programs/beets.nix
     ./programs/borgmatic.nix
     ./programs/bottom.nix
@@ -67,6 +69,8 @@ let
     ./programs/broot.nix
     ./programs/browserpass.nix
     ./programs/btop.nix
+    ./programs/carapace.nix
+    ./programs/cava.nix
     ./programs/chromium.nix
     ./programs/command-not-found/command-not-found.nix
     ./programs/comodoro.nix
@@ -77,7 +81,7 @@ let
     ./programs/eclipse.nix
     ./programs/emacs.nix
     ./programs/eww.nix
-    ./programs/exa.nix
+    ./programs/eza.nix
     ./programs/feh.nix
     ./programs/firefox.nix
     ./programs/fish.nix
@@ -95,6 +99,7 @@ let
     ./programs/gnome-terminal.nix
     ./programs/go.nix
     ./programs/gpg.nix
+    ./programs/granted.nix
     ./programs/havoc.nix
     ./programs/helix.nix
     ./programs/hexchat.nix
@@ -118,6 +123,7 @@ let
     ./programs/kakoune.nix
     ./programs/keychain.nix
     ./programs/khal.nix
+    ./programs/khard.nix
     ./programs/kitty.nix
     ./programs/kodi.nix
     ./programs/lazygit.nix
@@ -159,6 +165,7 @@ let
     ./programs/offlineimap.nix
     ./programs/oh-my-posh.nix
     ./programs/opam.nix
+    ./programs/openstackclient.nix
     ./programs/pandoc.nix
     ./programs/papis.nix
     ./programs/password-store.nix
@@ -177,11 +184,13 @@ let
     ./programs/qutebrowser.nix
     ./programs/rbw.nix
     ./programs/readline.nix
+    ./programs/rio.nix
     ./programs/ripgrep.nix
     ./programs/rofi-pass.nix
     ./programs/rofi.nix
     ./programs/rtorrent.nix
     ./programs/rtx.nix
+    ./programs/ruff.nix
     ./programs/sagemath.nix
     ./programs/sbt.nix
     ./programs/scmpuff.nix
@@ -194,11 +203,13 @@ let
     ./programs/ssh.nix
     ./programs/starship.nix
     ./programs/swaylock.nix
+    ./programs/swayr.nix
     ./programs/taskwarrior.nix
     ./programs/tealdeer.nix
     ./programs/terminator.nix
     ./programs/termite.nix
     ./programs/texlive.nix
+    ./programs/thefuck.nix
     ./programs/thunderbird.nix
     ./programs/timidity.nix
     ./programs/tint2.nix
@@ -220,7 +231,10 @@ let
     ./programs/wezterm.nix
     ./programs/wlogout.nix
     ./programs/wofi.nix
+    ./programs/wpaperd.nix
     ./programs/xmobar.nix
+    ./programs/xplr.nix
+    ./programs/yazi.nix
     ./programs/yt-dlp.nix
     ./programs/z-lua.nix
     ./programs/zathura.nix
@@ -229,6 +243,7 @@ let
     ./programs/zplug.nix
     ./programs/zsh.nix
     ./programs/zsh/prezto.nix
+    ./programs/zsh/zsh-abbr.nix
     ./services/autorandr.nix
     ./services/avizo.nix
     ./services/barrier.nix
@@ -239,10 +254,12 @@ let
     ./services/cachix-agent.nix
     ./services/caffeine.nix
     ./services/cbatticon.nix
+    ./services/cliphist.nix
     ./services/clipman.nix
     ./services/clipmenu.nix
     ./services/comodoro.nix
     ./services/copyq.nix
+    ./services/darkman.nix
     ./services/devilspie2.nix
     ./services/dropbox.nix
     ./services/dunst.nix
@@ -291,7 +308,6 @@ let
     ./services/pantalaimon.nix
     ./services/parcellite.nix
     ./services/pass-secret-service.nix
-    ./services/password-store-sync.nix
     ./services/pasystray.nix
     ./services/pbgopy.nix
     ./services/picom.nix
@@ -310,6 +326,7 @@ let
     ./services/safeeyes.nix
     ./services/screen-locker.nix
     ./services/sctd.nix
+    ./services/signaturepdf.nix
     ./services/spotifyd.nix
     ./services/ssh-agent.nix
     ./services/stalonetray.nix
@@ -354,6 +371,10 @@ let
     ./misc/nix.nix
     (pkgs.path + "/nixos/modules/misc/assertions.nix")
     (pkgs.path + "/nixos/modules/misc/meta.nix")
+
+    (mkRemovedOptionModule [ "services" "password-store-sync" ] ''
+      Use services.git-sync instead.
+    '')
   ] ++ optional useNixpkgsModule ./misc/nixpkgs.nix
     ++ optional (!useNixpkgsModule) ./misc/nixpkgs-disabled.nix;
 

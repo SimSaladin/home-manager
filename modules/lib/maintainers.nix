@@ -19,6 +19,12 @@
     githubId = 56743515;
     name = "Morgane Austreelis";
   };
+  Avimitin = {
+    name = "Avimitin";
+    email = "dev@avimit.in";
+    github = "Avimitin";
+    githubId = 30021675;
+  };
   blmhemu = {
     name = "blmhemu";
     email = "19410501+blmhemu@users.noreply.github.com";
@@ -36,6 +42,12 @@
     email = "86011416+CarlosLoboxyz@users.noreply.github.com";
     github = "CarlosLoboxyz";
     githubId = 86011416;
+  };
+  considerate = {
+    name = "Viktor Kronvall";
+    email = "viktor.kronvall@gmail.com";
+    github = "considerate";
+    githubId = 217918;
   };
   cvoges12 = {
     name = "Clayton Voges";
@@ -251,6 +263,12 @@
     githubId = 605641;
     name = "Bart Bakker";
   };
+  ilaumjd = {
+    name = "Ilham AM";
+    email = "ilaumjd@gmail.com";
+    github = "ilaumjd";
+    githubId = 16514431;
+  };
   jrobsonchase = {
     email = "josh@robsonchase.com";
     github = "jrobsonchase";
@@ -299,6 +317,12 @@
     github = "nurelin";
     githubId = 5276274;
   };
+  otavio = {
+    email = "otavio.salvador@ossystems.com.br";
+    github = "otavio";
+    githubId = 25278;
+    name = "Otavio Salvador";
+  };
   pltanton = {
     name = "pltanton";
     email = "plotnikovanton@gmail.com";
@@ -340,6 +364,12 @@
     email = "sebtm@users.noreply.github.com";
     github = "sebtm";
     githubId = 17243347;
+  };
+  shimunn = {
+    name = "shimun";
+    email = "home-manager.c.shimun@shimun.net";
+    github = "shimunn";
+    githubId = 41011289;
   };
   rasmus-kirk = {
     name = "Rasmus Kirk";
@@ -390,6 +420,11 @@
     keys =
       [{ fingerprint = "75F0 AB7C FE01 D077 AEE6  CAFD 353E 4A18 EE0F AB72"; }];
   };
+  tensor5 = {
+    github = "tensor5";
+    githubId = 1545895;
+    name = "Nicola Squartini";
+  };
   toastal = {
     email = "toastal+nix@posteo.net";
     matrix = "@toastal:matrix.org";
@@ -423,5 +458,17 @@
     email = "d@aufomm.com";
     github = "liyangau";
     githubId = 71299093;
+  };
+  wcarlsen = {
+    name = "Willi Carlsen";
+    email = "carlsenwilli+nix@gmail.com";
+    github = "wcarlsen";
+    githubId = 17003032;
+  };
+  "9p4" = {
+    name = "9p4";
+    email = "vcs@ersei.net";
+    github = "9p4";
+    githubId = 17993169;
   };
 }

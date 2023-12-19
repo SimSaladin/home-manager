@@ -80,7 +80,10 @@
             configuration = { ... }: {
               imports = modules
                 ++ [{ programs.home-manager.path = toString ./.; }];
-              nixpkgs = { inherit (pkgs) config overlays; };
+              nixpkgs = {
+                config = nixpkgs.lib.mkDefault pkgs.config;
+                inherit (pkgs) overlays;
+              };
             };
           });
       };
@@ -103,12 +106,18 @@
       packages = forAllSystems (system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
+          lib = pkgs.lib;
           releaseInfo = nixpkgs.lib.importJSON ./release.json;
           docs = import ./docs {
             inherit pkgs;
             inherit (releaseInfo) release isReleaseBranch;
           };
           hmPkg = pkgs.callPackage ./home-manager { path = toString ./.; };
+
+          testPackages = let
+            tests = import ./tests { inherit pkgs; };
+            renameTestPkg = n: lib.nameValuePair "test-${n}";
+          in lib.mapAttrs' renameTestPkg tests.build;
         in {
           default = hmPkg;
           home-manager = hmPkg;
@@ -116,7 +125,7 @@
           docs-html = docs.manual.html;
           docs-json = docs.options.json;
           docs-manpages = docs.manPages;
-        });
+        } // testPackages);
 
       defaultPackage = forAllSystems (system: self.packages.${system}.default);
     });
