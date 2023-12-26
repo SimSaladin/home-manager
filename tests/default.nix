@@ -84,6 +84,7 @@ import nmt {
     ./modules/programs/git
     ./modules/programs/git-cliff
     ./modules/programs/gpg
+    ./modules/programs/gradle
     ./modules/programs/granted
     ./modules/programs/helix
     ./modules/programs/himalaya
@@ -135,6 +136,7 @@ import nmt {
     ./modules/programs/rtx
     ./modules/programs/ruff
     ./modules/programs/sagemath
+    ./modules/programs/sapling
     ./modules/programs/sbt
     ./modules/programs/scmpuff
     ./modules/programs/sioyek

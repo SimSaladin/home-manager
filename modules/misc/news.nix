@@ -1334,6 +1334,20 @@ in
           to keep the previous behaviour.
         '';
       }
+
+      {
+        time = "2023-12-19T22:57:52+00:00";
+        message = ''
+          A new module is available: 'programs.sapling'.
+        '';
+      }
+
+      {
+        time = "2023-12-20T11:41:10+00:00";
+        message = ''
+          A new module is available: 'programs.gradle'.
+        '';
+      }
     ];
   };
 }

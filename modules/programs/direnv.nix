@@ -114,34 +114,53 @@ in {
       # Using mkAfter to make it more likely to appear after other
       # manipulations of the prompt.
       mkAfter ''
-        eval "$(${cfg.package}/bin/direnv hook bash)"
+        eval "$(${getExe cfg.package} hook bash)"
       '');
 
     programs.zsh.initExtra = mkIf cfg.enableZshIntegration ''
-      eval "$(${cfg.package}/bin/direnv hook zsh)"
+      eval "$(${getExe cfg.package} hook zsh)"
     '';
 
     programs.fish.interactiveShellInit = mkIf cfg.enableFishIntegration (
       # Using mkAfter to make it more likely to appear after other
       # manipulations of the prompt.
       mkAfter ''
-        ${cfg.package}/bin/direnv hook fish | source
+        ${getExe cfg.package} hook fish | source
       '');
 
     programs.nushell.extraConfig = mkIf cfg.enableNushellIntegration (
       # Using mkAfter to make it more likely to appear after other
       # manipulations of the prompt.
       mkAfter ''
-        $env.config = ($env | default {} config).config
-        $env.config = ($env.config | default {} hooks)
-        $env.config = ($env.config | update hooks ($env.config.hooks | default [] pre_prompt))
-        $env.config = ($env.config | update hooks.pre_prompt ($env.config.hooks.pre_prompt | append {
-          code: "
-            let direnv = (${cfg.package}/bin/direnv export json | from json)
-            let direnv = if not ($direnv | is-empty) { $direnv } else { {} }
-            $direnv | load-env
-            "
-        }))
+        $env.config = ($env.config? | default {})
+        $env.config.hooks = ($env.config.hooks? | default {})
+        $env.config.hooks.pre_prompt = (
+            $env.config.hooks.pre_prompt?
+            | default []
+            | append {||
+                let direnv = (${getExe cfg.package} export json
+                | from json
+                | default {})
+                if ($direnv | is-empty) {
+                    return
+                }
+                $direnv
+                | items {|key, value|
+                    {
+                        key: $key
+                        value: (do (
+                            $env.ENV_CONVERSIONS?
+                            | default {}
+                            | get -i $key
+                            | get -i from_string
+                            | default {|x| $x}
+                        ) $value)
+                    }
+                }
+                | transpose -ird
+                | load-env
+            }
+        )
       '');
   };
 }

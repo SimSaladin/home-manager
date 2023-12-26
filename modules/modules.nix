@@ -99,6 +99,7 @@ let
     ./programs/gnome-terminal.nix
     ./programs/go.nix
     ./programs/gpg.nix
+    ./programs/gradle.nix
     ./programs/granted.nix
     ./programs/havoc.nix
     ./programs/helix.nix
@@ -192,6 +193,7 @@ let
     ./programs/rtx.nix
     ./programs/ruff.nix
     ./programs/sagemath.nix
+    ./programs/sapling.nix
     ./programs/sbt.nix
     ./programs/scmpuff.nix
     ./programs/script-directory.nix
