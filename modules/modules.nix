@@ -37,11 +37,13 @@ let
     ./misc/specialisation.nix
     ./misc/submodule-support.nix
     ./misc/tmpfiles.nix
+    ./misc/uninstall.nix
     ./misc/version.nix
     ./misc/vte.nix
     ./misc/xdg-desktop-entries.nix
     ./misc/xdg-mime-apps.nix
     ./misc/xdg-mime.nix
+    ./misc/xdg-portal.nix
     ./misc/xdg-system-dirs.nix
     ./misc/xdg-user-dirs.nix
     ./misc/xdg.nix
@@ -63,6 +65,7 @@ let
     ./programs/bat.nix
     ./programs/bacon.nix
     ./programs/beets.nix
+    ./programs/bemenu.nix
     ./programs/borgmatic.nix
     ./programs/bottom.nix
     ./programs/boxxy.nix
@@ -109,6 +112,7 @@ let
     ./programs/hstr.nix
     ./programs/htop.nix
     ./programs/hyfetch.nix
+    ./programs/i3blocks.nix
     ./programs/i3status-rust.nix
     ./programs/i3status.nix
     ./programs/imv.nix
@@ -116,6 +120,7 @@ let
     ./programs/ion.nix
     ./programs/irssi.nix
     ./programs/java.nix
+    ./programs/jetbrains-remote.nix
     ./programs/jq.nix
     ./programs/jujutsu.nix
     ./programs/joshuto.nix
@@ -143,6 +148,7 @@ let
     ./programs/mcfly.nix
     ./programs/mercurial.nix
     ./programs/micro.nix
+    ./programs/mise.nix
     ./programs/mpv.nix
     ./programs/mr.nix
     ./programs/msmtp.nix
@@ -190,7 +196,6 @@ let
     ./programs/rofi-pass.nix
     ./programs/rofi.nix
     ./programs/rtorrent.nix
-    ./programs/rtx.nix
     ./programs/ruff.nix
     ./programs/sagemath.nix
     ./programs/sapling.nix
@@ -198,6 +203,7 @@ let
     ./programs/scmpuff.nix
     ./programs/script-directory.nix
     ./programs/senpai.nix
+    ./programs/sftpman.nix
     ./programs/sioyek.nix
     ./programs/skim.nix
     ./programs/sm64ex.nix
@@ -246,6 +252,7 @@ let
     ./programs/zsh.nix
     ./programs/zsh/prezto.nix
     ./programs/zsh/zsh-abbr.nix
+    ./services/arrpc.nix
     ./services/autorandr.nix
     ./services/avizo.nix
     ./services/barrier.nix
@@ -286,7 +293,6 @@ let
     ./services/kanshi.nix
     ./services/kbfs.nix
     ./services/kdeconnect.nix
-    ./services/keepassx.nix
     ./services/keybase.nix
     ./services/keynav.nix
     ./services/lieer.nix
@@ -304,8 +310,10 @@ let
     ./services/muchsync.nix
     ./services/network-manager-applet.nix
     ./services/nextcloud-client.nix
+    ./services/nix-gc.nix
     ./services/notify-osd.nix
     ./services/opensnitch-ui.nix
+    ./services/osmscout-server.nix
     ./services/owncloud-client.nix
     ./services/pantalaimon.nix
     ./services/parcellite.nix
@@ -359,6 +367,7 @@ let
     ./services/window-managers/spectrwm.nix
     ./services/window-managers/xmonad.nix
     ./services/wlsunset.nix
+    ./services/wob.nix
     ./services/xcape.nix
     ./services/xembed-sni-proxy.nix
     ./services/xidlehook.nix
@@ -376,6 +385,9 @@ let
 
     (mkRemovedOptionModule [ "services" "password-store-sync" ] ''
       Use services.git-sync instead.
+    '')
+    (mkRemovedOptionModule [ "services" "keepassx" ] ''
+      KeePassX is no longer maintained.
     '')
   ] ++ optional useNixpkgsModule ./misc/nixpkgs.nix
     ++ optional (!useNixpkgsModule) ./misc/nixpkgs-disabled.nix;

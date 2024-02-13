@@ -91,6 +91,7 @@ let
           "${cfg.config.modifier}+7" = "workspace number 7";
           "${cfg.config.modifier}+8" = "workspace number 8";
           "${cfg.config.modifier}+9" = "workspace number 9";
+          "${cfg.config.modifier}+0" = "workspace number 10";
 
           "${cfg.config.modifier}+Shift+1" =
             "move container to workspace number 1";
@@ -110,6 +111,8 @@ let
             "move container to workspace number 8";
           "${cfg.config.modifier}+Shift+9" =
             "move container to workspace number 9";
+          "${cfg.config.modifier}+Shift+0" =
+            "move container to workspace number 10";
 
           "${cfg.config.modifier}+Shift+minus" = "move scratchpad";
           "${cfg.config.modifier}+minus" = "scratchpad show";
@@ -308,7 +311,7 @@ let
         )
       else
         [ ]) ++ (optional cfg.systemd.enable ''
-          exec "${pkgs.dbus}/bin/dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP XDG_SESSION_TYPE NIXOS_OZONE_WL; systemctl --user start sway-session.target"'')
+          exec "${pkgs.dbus}/bin/dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP XDG_SESSION_TYPE NIXOS_OZONE_WL XCURSOR_THEME XCURSOR_SIZE; systemctl --user start sway-session.target"'')
       ++ (optional (!cfg.xwayland) "xwayland disable") ++ [ cfg.extraConfig ]));
 
   defaultSwayPackage = pkgs.sway.override {

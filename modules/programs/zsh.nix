@@ -253,6 +253,7 @@ in
 {
   imports = [
     (mkRenamedOptionModule [ "programs" "zsh" "enableSyntaxHighlighting" ] [ "programs" "zsh" "syntaxHighlighting" "enable" ])
+    (mkRenamedOptionModule [ "programs" "zsh" "zproof" ] [ "programs" "zsh" "zprof" ])
   ];
 
   options = {
@@ -354,6 +355,13 @@ in
       enableAutosuggestions = mkOption {
         default = false;
         description = "Enable zsh autosuggestions";
+      };
+
+      zprof.enable = mkOption {
+        default = false;
+        description = ''
+          Enable zprof in your zshrc.
+        '';
       };
 
       syntaxHighlighting = mkOption {
@@ -534,6 +542,12 @@ in
         ++ optional cfg.oh-my-zsh.enable cfg.oh-my-zsh.package;
 
       home.file."${relToDotDir ".zshrc"}".text = concatStringsSep "\n" ([
+        # zprof must be loaded before everything else, since it
+        # benchmarks the shell initialization.
+        (optionalString cfg.zprof.enable ''
+          zmodload zsh/zprof
+        '')
+
         cfg.initExtraFirst
         "typeset -U path cdpath fpath manpath"
 
@@ -656,6 +670,11 @@ in
             (downKey: "bindkey \"${downKey}\" history-substring-search-down")
             (lib.toList cfg.historySubstringSearch.searchDownKey)
           }
+        '')
+
+        (optionalString cfg.zprof.enable
+        ''
+          zprof
         '')
       ]);
     }

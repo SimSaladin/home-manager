@@ -42,14 +42,10 @@ let
       };
     };
 
-    config = {
-      id = mkDefault (builtins.hashString "sha256" config.message);
-    };
+    config = { id = mkDefault (builtins.hashString "sha256" config.message); };
   });
 
-in
-
-{
+in {
   meta.maintainers = [ maintainers.rycee ];
 
   options = {
@@ -97,9 +93,8 @@ in
   };
 
   config = {
-    news.json.output = pkgs.writeText "hm-news.json" (builtins.toJSON {
-      inherit (cfg) display entries;
-    });
+    news.json.output = pkgs.writeText "hm-news.json"
+      (builtins.toJSON { inherit (cfg) display entries; });
 
     # Add news entries in chronological order (i.e., latest time
     # should be at the bottom of the list). The time should be
@@ -255,7 +250,8 @@ in
 
       {
         time = "2021-09-23T17:04:48+00:00";
-        condition = hostPlatform.isLinux && config.services.screen-locker.enable;
+        condition = hostPlatform.isLinux
+          && config.services.screen-locker.enable;
         message = ''
           'xautolock' is now optional in 'services.screen-locker', and the
           'services.screen-locker' options have been reorganized for clarity.
@@ -1346,6 +1342,76 @@ in
         time = "2023-12-20T11:41:10+00:00";
         message = ''
           A new module is available: 'programs.gradle'.
+        '';
+      }
+
+      {
+        time = "2023-12-28T08:28:26+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          A new module is available: 'services.osmscout-server'.
+        '';
+      }
+
+      {
+        time = "2023-12-28T13:01:15+00:00";
+        message = ''
+          A new module is available: 'programs.sftpman'.
+        '';
+      }
+
+      {
+        time = "2023-12-29T08:22:40+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          A new module is available: 'programs.bemenu'.
+        '';
+      }
+
+      {
+        time = "2024-01-01T09:09:42+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          A new module is available: 'programs.i3blocks'.
+        '';
+      }
+
+      {
+        time = "2024-01-03T19:25:09+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          A new module is available: 'xdg.portal'.
+        '';
+      }
+
+      {
+        time = "2024-01-20T23:45:07+00:00";
+        message = ''
+          A new module is available: 'programs.mise'.
+
+          This module replaces 'programs.rtx', which has been removed.
+        '';
+      }
+
+      {
+        time = "2024-01-27T22:53:00+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          A new module is available: 'services.wob'.
+        '';
+      }
+
+      {
+        time = "2024-02-05T22:33:54+00:00";
+        message = ''
+          A new module is available: 'services.arrpc'
+        '';
+      }
+
+      {
+        time = "2024-02-05T22:45:37+00:00";
+        message = ''
+          A new module is available: 'programs.jetbrains-remote'
         '';
       }
     ];

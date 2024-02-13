@@ -159,6 +159,12 @@
     github = "loicreynier";
     githubId = 88983487;
   };
+  LucasWagler = {
+    name = "Lucas Wagler";
+    email = "lucas@wagler.dev";
+    github = "LucasWagler";
+    githubId = 32136449;
+  };
   matrss = {
     name = "Matthias Riße";
     email = "matrss@users.noreply.github.com";
@@ -216,6 +222,11 @@
     github = "GaetanLepage";
     githubId = 33058747;
     name = "Gaetan Lepage";
+  };
+  genericnerdyusername = {
+    email = "genericnerdyusername@proton.me";
+    github = "genericnerdyusername";
+    githubId = 111183546;
   };
   maximsmol = {
     email = "maximsmol@gmail.com";
@@ -316,6 +327,12 @@
     email = "nurelin@users.noreply.github.com";
     github = "nurelin";
     githubId = 5276274;
+  };
+  omernaveedxyz = {
+    name = "Omer Naveed";
+    email = "omer@omernaveed.dev";
+    github = "omernaveedxyz";
+    githubId = 112912585;
   };
   otavio = {
     email = "otavio.salvador@ossystems.com.br";
@@ -470,5 +487,11 @@
     email = "vcs@ersei.net";
     github = "9p4";
     githubId = 17993169;
+  };
+  britter = {
+    name = "Benedikt Ritter";
+    email = "beneritter@gmail.com";
+    github = "britter";
+    githubId = 1327662;
   };
 }

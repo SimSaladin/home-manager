@@ -162,8 +162,8 @@ in {
       home.activation.batCache = hm.dag.entryAfter [ "linkGeneration" ] ''
         (
           export XDG_CACHE_HOME=${escapeShellArg config.xdg.cacheHome}
-          $VERBOSE_ECHO "Rebuilding bat theme cache"
-          $DRY_RUN_CMD ${lib.getExe package} cache --build
+          verboseEcho "Rebuilding bat theme cache"
+          run ${lib.getExe package} cache --build
         )
       '';
     }
