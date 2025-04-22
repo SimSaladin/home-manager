@@ -163,9 +163,15 @@ let
       };
 
       action = mkOption {
-        type = types.str;
+        type = types.nullOr types.str;
         example = "<enter-command>toggle sidebar_visible<enter><refresh>";
         description = "Specify the action to take.";
+      };
+
+      description = mkOption {
+        type = types.str;
+        default = "";
+        description = "Description of the macro.";
       };
     };
   };
@@ -288,6 +294,23 @@ let
       ''
     ];
 
+    /* XXX support switching between many accounts
+     source ${accountFilename account}
+     mailboxes "${folder}/${folders.inbox}"
+     set my_account_folder_${name} = '${folder}/'
+     set my_account_hook_${name} = "set imap_user='$imap_user'; set imap_pass='$imap_pass'; set imap_authenticators='$imap_authenticators'; set imap_oauth_refresh_command='$imap_oauth_refresh_command'"
+     set my_folder_hook_${name} = "set folder='$folder'; set spoolfile='$spoolfile'; set record='$record'; set postponed='$postponed'; set trash='$trash'; set copy='$copy'"
+
+    accountHooks = account:
+    with account;
+    ''
+      folder-hook ($my_account_folder_${name}) "$my_folder_hook_${name}"
+      account-hook ($my_account_folder_${name}) "$my_account_hook_${name}"
+    '';
+     XXX reset:
+     account-hook . 'unset imap_user imap_pass imap_oauth_refresh_command; reset imap_authenticators'
+    */
+
   mraSection =
     account:
     if account.imap.host != null || account.maildir != null then
@@ -308,7 +331,11 @@ let
   genBindMapper =
     bindType:
     concatMapStringsSep "\n" (
-      bind: ''${bindType} ${concatStringsSep "," (lib.toList bind.map)} ${bind.key} "${bind.action}"''
+      bind: if bind.action == null
+        then ''un${bindType} ${concatStringsSep "," (lib.toList bind.map)} ${bind.key}''
+        else ''${bindType} ${concatStringsSep "," (lib.toList bind.map)} ${bind.key} "${bind.action}"''
+          # Macros can have an optional description at the end (used for help texts)
+          + optionalString (bindType == "macro" && (bind.description or "") != "") '' "${bind.description}"''
     );
 
   bindSection = (genBindMapper "bind") cfg.binds;
@@ -442,7 +469,7 @@ in
       };
 
       settings = mkOption {
-        type = types.attrsOf types.str;
+        type = types.attrsOf (types.nullOr types.str);
         default = { };
         description = "Extra configuration appended to the end.";
       };
