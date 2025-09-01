@@ -19,9 +19,11 @@ let
 
   pluginModule = types.submodule {
     options = {
-      plugin = mkOption {
-        type = types.package;
-        description = "Path of the configuration file to include.";
+      plugin = lib.mkPackageOption pkgs.tmuxPlugins "plugin" {
+        example = "pkgs.tmuxPlugins.sensible";
+        default = null;
+        pkgsText = "pkgs.tmuxPlugins";
+        extraDescription = "Path of the configuration file to include.";
       };
 
       extraConfig = mkOption {
@@ -82,23 +84,17 @@ let
     ''}
 
     ${
-      if cfg.prefix != null then
-        ''
-          # rebind main key: ${cfg.prefix}
-          unbind C-${defaultShortcut}
-          set -g prefix ${cfg.prefix}
-          bind -N "Send the prefix key through to the application" \
-            ${cfg.prefix} send-prefix
-        ''
-      else
-        optionalString (cfg.shortcut != defaultShortcut) ''
-          # rebind main key: C-${cfg.shortcut}
-          unbind C-${defaultShortcut}
-          set -g prefix C-${cfg.shortcut}
-          bind -N "Send the prefix key through to the application" \
-            ${cfg.shortcut} send-prefix
-          bind C-${cfg.shortcut} last-window
-        ''
+      let
+        defaultPrefix = "C-${defaultShortcut}";
+        prefix = if cfg.prefix != null then cfg.prefix else "C-${cfg.shortcut}";
+      in
+      optionalString (prefix != defaultPrefix) ''
+        # rebind main key: ${prefix}
+        unbind ${defaultPrefix}
+        set -g prefix ${prefix}
+        bind -n -N "Send the prefix key through to the application" \
+          ${prefix} send-prefix
+      ''
     }
 
     ${optionalString cfg.disableConfirmationPrompt ''
@@ -248,7 +244,7 @@ in
         '';
       };
 
-      package = lib.mkPackageOption pkgs "tmux" { };
+      package = lib.mkPackageOption pkgs "tmux" { nullable = true; };
 
       reverseSplit = mkOption {
         default = false;
@@ -300,7 +296,7 @@ in
 
       shell = mkOption {
         default = defaultShell;
-        example = literalExpression "${pkgs.zsh}/bin/zsh";
+        example = literalExpression "\${pkgs.zsh}/bin/zsh";
         type = with types; nullOr str;
         description = "Set the default-shell tmux variable.";
       };
@@ -356,7 +352,7 @@ in
     lib.mkMerge [
       {
         home.packages =
-          [ cfg.package ]
+          lib.optional (cfg.package != null) cfg.package
           ++ lib.optional cfg.tmuxinator.enable pkgs.tmuxinator
           ++ lib.optional cfg.tmuxp.enable pkgs.tmuxp;
       }

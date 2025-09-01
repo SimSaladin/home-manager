@@ -22,7 +22,8 @@ let
 
   finalConfig = {
     inherit (cfg) order;
-  } // cfg.extraConfig;
+  }
+  // cfg.extraConfig;
 
   configFile = jsonFormat.generate "dwm-status.json" finalConfig;
 
@@ -32,12 +33,8 @@ in
     services.dwm-status = {
       enable = lib.mkEnableOption "dwm-status user service";
 
-      package = mkOption {
-        type = types.package;
-        default = pkgs.dwm-status;
-        defaultText = lib.literalExpression "pkgs.dwm-status";
+      package = lib.mkPackageOption pkgs "dwm-status" {
         example = "pkgs.dwm-status.override { enableAlsaUtils = false; }";
-        description = "Which dwm-status package to use.";
       };
 
       order = mkOption {
@@ -82,7 +79,7 @@ in
       };
 
       Service = {
-        ExecStart = "${cfg.package}/bin/dwm-status ${configFile}";
+        ExecStart = "${cfg.package}/bin/dwm-status ${configFile} --quiet";
       };
     };
   };

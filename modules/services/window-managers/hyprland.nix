@@ -32,7 +32,7 @@ in
 
     (lib.mkRemovedOptionModule # \
       [ "wayland" "windowManager" "hyprland" "xwayland" "hidpi" ]
-      "HiDPI patches are deprecated. Refer to https://wiki.hyprland.org/Configuring/XWayland"
+      "HiDPI patches are deprecated. Refer to https://wiki.hypr.land/Configuring/XWayland"
     )
 
     (lib.mkRemovedOptionModule # \
@@ -189,7 +189,7 @@ in
       description = ''
         Hyprland configuration written in Nix. Entries with the same key
         should be written as lists. Variables' and colors' names should be
-        quoted. See <https://wiki.hyprland.org> for more examples.
+        quoted. See <https://wiki.hypr.land> for more examples.
 
         ::: {.note}
         Use the [](#opt-wayland.windowManager.hyprland.plugins) option to
@@ -250,7 +250,8 @@ in
         "$"
         "bezier"
         "name"
-      ] ++ lib.optionals cfg.sourceFirst [ "source" ];
+        "output"
+      ];
       example = [
         "$"
         "bezier"
@@ -283,6 +284,8 @@ in
         shouldGenerate =
           cfg.systemd.enable || cfg.extraConfig != "" || cfg.settings != { } || cfg.plugins != [ ];
 
+        importantPrefixes = cfg.importantPrefixes ++ lib.optional cfg.sourceFirst "source";
+
         pluginsToHyprconf =
           plugins:
           lib.hm.generators.toHyprconf {
@@ -294,7 +297,7 @@ in
                 in
                 map (p: "hyprctl plugin load ${mkEntry p}") cfg.plugins;
             };
-            inherit (cfg) importantPrefixes;
+            inherit importantPrefixes;
           };
       in
       lib.mkIf shouldGenerate {
@@ -304,7 +307,7 @@ in
           + lib.optionalString (cfg.settings != { }) (
             lib.hm.generators.toHyprconf {
               attrs = cfg.settings;
-              inherit (cfg) importantPrefixes;
+              inherit importantPrefixes;
             }
           )
           + lib.optionalString (cfg.extraConfig != "") cfg.extraConfig;
@@ -334,7 +337,8 @@ in
         BindsTo = [ "graphical-session.target" ];
         Wants = [
           "graphical-session-pre.target"
-        ] ++ lib.optional cfg.systemd.enableXdgAutostart "xdg-desktop-autostart.target";
+        ]
+        ++ lib.optional cfg.systemd.enableXdgAutostart "xdg-desktop-autostart.target";
         After = [ "graphical-session-pre.target" ];
         Before = lib.mkIf cfg.systemd.enableXdgAutostart [ "xdg-desktop-autostart.target" ];
       };

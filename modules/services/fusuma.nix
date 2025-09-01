@@ -63,17 +63,12 @@ let
 
 in
 {
-  meta.maintainers = [ lib.hm.maintainers.iosmanthus ];
+  meta.maintainers = [ lib.maintainers.iosmanthus ];
 
   options.services.fusuma = {
     enable = lib.mkEnableOption "the fusuma systemd service to automatically enable touchpad gesture";
 
-    package = mkOption {
-      type = types.package;
-      default = pkgs.fusuma;
-      defaultText = literalExpression "pkgs.fusuma";
-      description = "Package providing {command}`fusuma`.";
-    };
+    package = lib.mkPackageOption pkgs "fusuma" { };
 
     settings = mkOption {
       type = yamlFormat.type;

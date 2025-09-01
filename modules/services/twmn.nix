@@ -54,7 +54,7 @@ in
     extraConfig = mkOption {
       type = types.attrs;
       default = { };
-      example = literalExpression ''{ main.activation_command = "\${pkgs.hello}/bin/hello"; }'';
+      example = literalExpression ''{ main.activation_command = "''${pkgs.hello}/bin/hello"; }'';
       description = ''
         Extra configuration options to add to the twmnd config file. See
         <https://github.com/sboli/twmn/blob/master/README.md>
@@ -123,13 +123,13 @@ in
       };
 
       font = {
-        package = mkOption {
-          type = types.nullOr types.package;
+        package = lib.mkPackageOption pkgs "font" {
           default = null;
-          example = literalExpression "pkgs.dejavu_fonts";
-          description = ''
-            Notification text's font package. If `null` then
-            the font is assumed to already be available in your profile.
+          example = "pkgs.dejavu_fonts";
+          nullable = true;
+          extraDescription = ''
+            Package providing the font to use for the notification text.
+            This package is only used if `font.package` is not null.
           '';
         };
 

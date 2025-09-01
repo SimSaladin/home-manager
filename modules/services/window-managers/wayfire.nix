@@ -14,7 +14,7 @@
       configIniType =
         with types;
         let
-          primitiveType = either str (either bool number);
+          primitiveType = either (either str path) (either bool number);
           sectionType = attrsOf primitiveType;
         in
         attrsOf sectionType;
@@ -79,7 +79,9 @@
       wf-shell = {
         enable = lib.mkEnableOption "Manage wf-shell Configuration";
 
-        package = lib.mkPackageOption pkgs.wayfirePlugins "wf-shell" { };
+        package = lib.mkPackageOption pkgs.wayfirePlugins "wf-shell" {
+          pkgsText = "pkgs.wayfirePlugins";
+        };
 
         settings = lib.mkOption {
           type = configIniType;

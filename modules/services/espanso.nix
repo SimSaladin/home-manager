@@ -10,7 +10,6 @@ let
     mkPackageOption
     mkEnableOption
     mkIf
-    maintainers
     literalExpression
     types
     mkRemovedOptionModule
@@ -46,23 +45,18 @@ in
       "settings"
     ] "Use services.espanso.configs and services.espanso.matches instead.")
   ];
-  meta.maintainers = [
-    maintainers.lucasew
-    maintainers.bobvanderlinden
-    lib.hm.maintainers.liyangau
-    maintainers.n8henrie
-    maintainers.phanirithvij
+  meta.maintainers = with lib.maintainers; [
+    bobvanderlinden
+    liyangau
+    lucasew
+    n8henrie
+    phanirithvij
   ];
   options = {
     services.espanso = {
       enable = mkEnableOption "Espanso: cross platform text expander in Rust";
 
-      package = mkOption {
-        type = types.package;
-        description = "Which espanso package to use";
-        default = pkgs.espanso;
-        defaultText = literalExpression "pkgs.espanso";
-      };
+      package = lib.mkPackageOption pkgs "espanso" { };
 
       package-wayland =
         mkPackageOption pkgs "espanso-wayland" {

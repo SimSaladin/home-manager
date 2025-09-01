@@ -9,10 +9,11 @@ let
 
   cfg = config.services.mbsync;
 
-  mbsyncOptions =
-    [ "--all" ]
-    ++ lib.optional (cfg.verbose) "--verbose"
-    ++ lib.optional (cfg.configFile != null) "--config ${cfg.configFile}";
+  mbsyncOptions = [
+    "--all"
+  ]
+  ++ lib.optional (cfg.verbose) "--verbose"
+  ++ lib.optional (cfg.configFile != null) "--config ${cfg.configFile}";
 
 in
 {
@@ -21,13 +22,7 @@ in
   options.services.mbsync = {
     enable = lib.mkEnableOption "mbsync";
 
-    package = mkOption {
-      type = types.package;
-      default = pkgs.isync;
-      defaultText = lib.literalExpression "pkgs.isync";
-      example = lib.literalExpression "pkgs.isync";
-      description = "The package to use for the mbsync binary.";
-    };
+    package = lib.mkPackageOption pkgs "isync" { };
 
     frequency = mkOption {
       type = types.str;
@@ -88,17 +83,16 @@ in
         Description = "mbsync mailbox synchronization";
       };
 
-      Service =
-        {
-          Type = "oneshot";
-          ExecStart = "${cfg.package}/bin/mbsync ${lib.concatStringsSep " " mbsyncOptions}";
-        }
-        // (lib.optionalAttrs (cfg.postExec != null) {
-          ExecStartPost = cfg.postExec;
-        })
-        // (lib.optionalAttrs (cfg.preExec != null) {
-          ExecStartPre = cfg.preExec;
-        });
+      Service = {
+        Type = "oneshot";
+        ExecStart = "${cfg.package}/bin/mbsync ${lib.concatStringsSep " " mbsyncOptions}";
+      }
+      // (lib.optionalAttrs (cfg.postExec != null) {
+        ExecStartPost = cfg.postExec;
+      })
+      // (lib.optionalAttrs (cfg.preExec != null) {
+        ExecStartPre = cfg.preExec;
+      });
     };
 
     systemd.user.timers.mbsync = {

@@ -20,14 +20,7 @@ in
         '';
       };
 
-      package = mkOption {
-        type = types.package;
-        default = pkgs.mpd;
-        defaultText = "pkgs.mpd";
-        description = ''
-          The MPD package to run.
-        '';
-      };
+      package = lib.mkPackageOption pkgs "mpd" { };
 
       musicDirectory = mkOption {
         type = with types; either path str;
@@ -60,7 +53,7 @@ in
         type = types.lines;
         default = "";
         description = ''
-          Extra directives added to to the end of MPD's configuration
+          Extra directives added to the end of MPD's configuration
           file, {file}`mpd.conf`. Basic configuration
           like file location and uid/gid is added automatically to the
           beginning of the file. For available options see
@@ -235,7 +228,8 @@ in
             (lib.getExe cfg.package)
             "--no-daemon"
             "${mpdConf}"
-          ] ++ cfg.extraArgs;
+          ]
+          ++ cfg.extraArgs;
           KeepAlive = true;
           ProcessType = "Interactive";
         };

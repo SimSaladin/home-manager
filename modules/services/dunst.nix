@@ -68,12 +68,7 @@ in
     services.dunst = {
       enable = lib.mkEnableOption "the dunst notification daemon";
 
-      package = mkOption {
-        type = types.package;
-        default = pkgs.dunst;
-        defaultText = literalExpression "pkgs.dunst";
-        description = "Package providing {command}`dunst`.";
-      };
+      package = lib.mkPackageOption pkgs "dunst" { };
 
       configFile = mkOption {
         type = with types; nullOr (either str path);
@@ -159,11 +154,13 @@ in
               "/run/current-system/sw"
               config.home.profileDirectory
               cfg.iconTheme.package
-            ] ++ optional useCustomTheme hicolorTheme.package;
+            ]
+            ++ optional useCustomTheme hicolorTheme.package;
 
             themes = [
               cfg.iconTheme
-            ] ++ optional useCustomTheme (hicolorTheme // { size = cfg.iconTheme.size; });
+            ]
+            ++ optional useCustomTheme (hicolorTheme // { size = cfg.iconTheme.size; });
 
             categories = [
               "actions"

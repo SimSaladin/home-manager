@@ -14,19 +14,12 @@ let
   cfg = config.services.wlsunset;
 in
 {
-  meta.maintainers = [ lib.hm.maintainers.matrss ];
+  meta.maintainers = [ lib.maintainers.matrss ];
 
   options.services.wlsunset = {
     enable = lib.mkEnableOption "wlsunset";
 
-    package = mkOption {
-      type = with types; package;
-      default = pkgs.wlsunset;
-      defaultText = "pkgs.wlsunset";
-      description = ''
-        wlsunset derivation to use.
-      '';
-    };
+    package = lib.mkPackageOption pkgs "wlsunset" { };
 
     latitude = mkOption {
       type = with types; nullOr (either str (either float int));
@@ -106,6 +99,7 @@ in
     systemdTarget = mkOption {
       type = with types; str;
       default = config.wayland.systemd.target;
+      defaultText = lib.literalExpression "config.wayland.systemd.target";
       description = ''
         Systemd target to bind to.
       '';
